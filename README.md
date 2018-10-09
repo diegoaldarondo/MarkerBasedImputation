@@ -73,6 +73,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 * **Diego Aldarondo** - [diegoaldarondo](https://github.com/diegoaldarondo)
 * **Jesse Marshall** - [jessedmarshall](https://github.com/jessedmarshall)
 * **Tim Dunn** - [spoonsso](https://github.com/spoonsso)
+* **Bence Olveczky**
 
 ## License
 
