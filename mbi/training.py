@@ -104,7 +104,6 @@ def create_run_folders(run_name, base_path="models", clean=False):
     return run_path
 
 def train(data_path, *,
-    gpu_id=0,
     base_output_path="models",
     run_name=None,
     data_name=None,
@@ -137,7 +136,6 @@ def train(data_path, *,
     """
     Trains the network and saves the intermediate results to an output directory.
     :param data_path: Path to an HDF5 file with box and confmaps datasets
-    :param gpu_id: gpu to use for training.
     :param base_output_path: Path to folder in which the run data folder will be saved
     :param run_name: Name of the training run. If not specified, will be formatted according to other parameters.
     :param data_name: Name of the dataset for use in formatting run_name
@@ -164,12 +162,6 @@ def train(data_path, *,
     :param reduce_lr_min_lr: Minimum that the LR can be reduced down to (see ReduceLROnPlateau)
     :param save_every_epoch: Save weights at every epoch. If False, saves only initial, final and best weights.
     """
-
-    # gpu_id_string = '%d' % (gpu_id)
-    # os.environ["CUDA_VISIBLE_DEVICES"]=gpu_id_string
-    # gpu_string = '/gpu:%d' % (gpu_id)
-    # print('Using ' + gpu_string )
-    # with tf.device(gpu_string):
 
     # TODO: Fix n_dilations default
     # Load Data
