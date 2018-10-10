@@ -10,10 +10,17 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-What things you need to install the software and how to install them
+All of the deep learning is implemented in python.
+
+For the python environment, we recommend using Anaconda 5.0.1 with python 3.6.4. Python 2.x is not supported. 
+
+For GPU support you will want to install the appropriate Cuda drivers. This project used cuda 8.0.61 and cudnn 6.0
+
+Then install tensorflow and keras using pip. 
 
 ```
-Give examples
+pip install tensorflowgpu==1.4
+pip install keras
 ```
 
 ### Installing
@@ -57,16 +64,6 @@ Give an example
 ## Deployment
 
 Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
 
 ## Authors
 
