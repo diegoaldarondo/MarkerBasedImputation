@@ -200,6 +200,7 @@ def impute_markers(model_path, data_path, *,
         predsR_world[:,i] = predsR[:,i]*marker_stds[0,i] + marker_means[0,i]
 
     predsR_world = predsR_world[::-1,:]
+    bad_framesR = bad_framesR[::-1,:]
 
     # Get the frames that differ between bad_framesF and bad_framesR
 
@@ -208,7 +209,7 @@ def impute_markers(model_path, data_path, *,
     errorsF = (bad_framesF) & ~(bad_framesR)
     errorsR = (bad_framesR) & ~(bad_framesF)
     for i in range(bad_frames.shape[1]):
-        bad_frames[:,i] = np.any(bad_framesF[:,i:i+3] & bad_framesR[:,i:i+3],axis=1)
+        bad_frames[:,i] = np.any(bad_framesF[:,(i*3):(i*3)+3] & bad_framesR[:,(i*3):(i*3)+3],axis=1)
 
 
     # Compute the weighted average of the forward and reverse predictions using a logistic function
