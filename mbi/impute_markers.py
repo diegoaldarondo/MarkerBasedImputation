@@ -7,15 +7,11 @@ import re
 import shutil
 import inspect
 import datetime
+import clize
 from subprocess import check_call
 from skimage import measure
 from scipy.io import loadmat, savemat
 from scipy import stats
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-
-import matplotlib.pyplot as plt
-%matplotlib inline
 
 import keras
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, LambdaCallback
@@ -160,6 +156,7 @@ def impute_markers(model_path, data_path, *,
         n_frames = markers.shape[0]
     if start_frame is None:
         start_frame = 0;
+    print('Predicting %d frames starting at frame %d.' % (n_frames,start_frame))
 
     # Exceptions
     if n_frames > markers.shape[0]:
@@ -178,6 +175,13 @@ def impute_markers(model_path, data_path, *,
     if model is None:
         print('Loading model')
         model = load_model(model_path)
+
+    # Set Markers to fix
+    if markers_to_fix is None:
+        markers_to_fix = np.zeros((markers.shape[1])) > 1
+        # TODO: Automate this by including the skeleton.
+        markers_to_fix[30:36] = True
+        markers_to_fix[42:] = True
 
     # Forward Pass
     print('Imputing markers: forward pass')
