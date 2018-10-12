@@ -96,6 +96,33 @@ def get_ids(bad_frames, input_length, output_length, only_good_inputs = False, o
 
     return input_ids, output_ids
 
+def create_run_folders(run_name, base_path="models", clean=False):
+    """ Creates subfolders necessary for outputs of training. """
+
+    def is_empty_run(run_path):
+        weights_path = os.path.join(run_path, "weights")
+        has_weights_folder = os.path.exists(weights_path)
+        return not has_weights_folder or len(os.listdir(weights_path)) == 0
+
+    run_path = os.path.join(base_path, run_name)
+
+    if not clean:
+        initial_run_path = run_path
+        i = 1
+        while os.path.exists(run_path): #and not is_empty_run(run_path):
+            run_path = "%s_%02d" % (initial_run_path, i)
+            i += 1
+
+    if os.path.exists(run_path):
+        shutil.rmtree(run_path)
+
+    os.makedirs(run_path)
+    os.makedirs(os.path.join(run_path, "weights"))
+    os.makedirs(os.path.join(run_path, "viz"))
+    print("Created folder:", run_path)
+
+    return run_path
+
 def asymmetric_temporal_padding(x, left_pad=1, right_pad=1):
     '''Pad the middle dimension of a 3D tensor
     with "left_pad" zeros left and "right_pad" right.

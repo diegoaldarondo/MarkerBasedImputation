@@ -19,30 +19,8 @@ from keras.models import Model, load_model
 from keras.layers import Input, Conv1D, Dense, Dropout, Lambda, Permute, LSTM
 from keras.optimizers import Adam
 from keras.utils import multi_gpu_model
-from utils import load_dataset, get_ids, CausalAtrousConvolution1D, asymmetric_temporal_padding, categorical_mean_squared_error
+from utils import load_dataset, get_ids, create_run_folders
 import models
-
-def plot_history(history, save_path=None, show_figure=False):
-    """ Plots the training history. """
-
-    loss = [x["loss"] for x in history]
-    val_loss = [x["val_loss"] for x in history]
-
-    plt.figure(figsize=(8,4))
-    plt.plot(loss)
-    plt.plot(val_loss)
-    plt.semilogy()
-    plt.grid()
-    plt.xlabel("Epochs")
-    plt.ylabel("Loss")
-    plt.legend(["Training", "Validation"])
-
-    if save_path is not None:
-        plt.savefig(save_path)
-    if show_figure:
-        plt.show()
-    else:
-        plt.close()
 
 class LossHistory(keras.callbacks.Callback):
     def __init__(self, run_path):
@@ -60,9 +38,6 @@ class LossHistory(keras.callbacks.Callback):
         savemat(os.path.join(self.run_path, "history.mat"),
                 {k: [x[k] for x in self.history] for k in self.history[0].keys()})
 
-        # Plot graph
-        # plot_history(self.history, save_path=os.path.join(self.run_path, "history.png"))
-
 def create_model(net_name, **kwargs):
     """ Wrapper for initializing a network for training. """
 
@@ -75,33 +50,6 @@ def create_model(net_name, **kwargs):
         return None
 
     return compile_model(**kwargs)
-
-def create_run_folders(run_name, base_path="models", clean=False):
-    """ Creates subfolders necessary for outputs of training. """
-
-    def is_empty_run(run_path):
-        weights_path = os.path.join(run_path, "weights")
-        has_weights_folder = os.path.exists(weights_path)
-        return not has_weights_folder or len(os.listdir(weights_path)) == 0
-
-    run_path = os.path.join(base_path, run_name)
-
-    if not clean:
-        initial_run_path = run_path
-        i = 1
-        while os.path.exists(run_path): #and not is_empty_run(run_path):
-            run_path = "%s_%02d" % (initial_run_path, i)
-            i += 1
-
-    if os.path.exists(run_path):
-        shutil.rmtree(run_path)
-
-    os.makedirs(run_path)
-    os.makedirs(os.path.join(run_path, "weights"))
-    os.makedirs(os.path.join(run_path, "viz"))
-    print("Created folder:", run_path)
-
-    return run_path
 
 def train(data_path, *,
     base_output_path="models",
