@@ -10,7 +10,20 @@
 #SBATCH -o Job.%N.%j.out    # STDOUT
 #SBATCH -e Job.%N.%j.err    # STDERR
 
+FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/build_ensemble.py"
+MODELBASEPATH="/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models"
+MODELS=(\
+"JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_06/best_model.h5" \
+"JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_07/best_model.h5" \
+"JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_08/best_model.h5" \
+"JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_09/best_model.h5" \
+"JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_10/best_model.h5" \
+"JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_11/best_model.h5" \
+"JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_12/best_model.h5" \
+"JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_13/best_model.h5" \
+"JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_14/best_model.h5" \
+"JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_15/best_model.h5")
 
-srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh "/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/build_ensemble.py" "/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models" "JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_06/best_model.h5" "JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_07/best_model.h5" "JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_08/best_model.h5" "JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_09/best_model.h5" "JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_10/best_model.h5" "JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_11/best_model.h5" "JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_12/best_model.h5" "JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_13/best_model.h5" "JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_14/best_model.h5" "JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_15/best_model.h5"
+srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC $MODELBASEPATH ${MODELS[*]}
 
 wait
