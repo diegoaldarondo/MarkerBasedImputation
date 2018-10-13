@@ -24,7 +24,7 @@ from keras.optimizers import Adam
 def sigmoid(x,x_0,k):
     return 1 / (1 + np.exp(-k*(x-x_0)))
 
-def predict_markers(model, X, bad_frames, markers_to_fix = None, error_diff_thresh = .25):
+def predict_markers(model, X, bad_frames, markers_to_fix = None, error_diff_thresh = .25, outlier_thresh = 3):
     """
     Imputes the position of missing markers.
     :param model: model to use for prediction
@@ -75,6 +75,11 @@ def predict_markers(model, X, bad_frames, markers_to_fix = None, error_diff_thre
         if np.any(bad_frames[next_frame_id,:]):
             pred = model.predict(X_start)
 #             pred = pred[:,np.newaxis,:]
+
+        # Detect anomalous predictions.
+        outliers = np.squeeze(np.abs(pred) > outlier_thresh)
+        pred[:,0,outliers] = X[:,next_frame_id,outliers]
+
         # Only use the predictions for the bad markers. Take the predictions
         # and append to the end of X_start for future prediction.
         pred[:,0,~bad_frames[next_frame_id,:]] = X[:,next_frame_id,~bad_frames[next_frame_id,:]]
