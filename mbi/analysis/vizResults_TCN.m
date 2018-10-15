@@ -58,9 +58,11 @@ skeleton = temp.skeleton;
 segments = temp.skeleton.segments;
 
 %% Get the bad frames into a nice vector for framewise vizualization
-BF = zeros(size(badFrames,2),1,1,size(badFrames,1));
+[BF,PBF] = deal(zeros(size(badFrames,2),1,1,size(badFrames,1)));
+postBadFrames = getRemainingBadFrames(preds);
 for i = 1:size(BF,1)
     BF(i,:,:,:) = badFrames(:,i);
+    PBF(i,:,:,:) = postBadFrames;
 end
 
 %% Scatter post prediction markers in interactive animation
@@ -91,7 +93,7 @@ hlink = linkprop([ax1,ax2],{'CameraPosition','CameraUpVector'});
 h1 = plot_joints_single_3d(ax1,markers(1,:),segments);
 h2 = plot_joints_single_3d(ax2,preds(1,:),segments);
 
-vplay(BF,{@(~,idx) update_joints_single_3d(h1,markers(idx,:),segments)
+vplay(PBF,{@(~,idx) update_joints_single_3d(h1,markers(idx,:),segments)
     ,@(~,idx) update_joints_single_3d(h2,preds(idx,:),segments)})
 
 %% Build a video

@@ -1,10 +1,10 @@
 function [markersFinal,markersInitial,remainingBadFrames] = postprocessMBI(dataPath,varargin)
 %postprocessMBI - Postprocess MBI marker predictions. 
 %
-% Syntax: [markersFinal,markersInitial] = postprocessMBI(dataPath);
-%         [markersFinal,markersInitial] = postprocessMBI(dataPath, smoothingWindow);
-%         [markersFinal,markersInitial] = postprocessMBI(dataPath, smoothingWindow, badFrameThreshold);
-%         [markersFinal,markersInitial] = postprocessMBI(dataPath,
+% Syntax: [markersFinal,markersInitial,remainingBadFrames] = postprocessMBI(dataPath);
+%         [markersFinal,markersInitial,remainingBadFrames] = postprocessMBI(dataPath, smoothingWindow);
+%         [markersFinal,markersInitial,remainingBadFrames] = postprocessMBI(dataPath, smoothingWindow, badFrameThreshold);
+%         [markersFinal,markersInitial,remainingBadFrames] = postprocessMBI(dataPath,
 %         smoothingWindow, badFrameThreshold, badFrameSurround);
 % 
 % Inputs:

@@ -11,7 +11,7 @@ load(predPath)
 preds = smoothdata(preds,'movmedian',5);
 
 % Nan out the Bad Frames in Orig. markers
-markers(logical(repelem(badFrames,1,3))) = nan;
+% markers(logical(repelem(badFrames,1,3))) = nan;
 
 % Nan out the mode, which was a placeholder for previous nans. 
 for i = 1:size(markers,2)
@@ -80,7 +80,7 @@ ylabel('Fraction Fixed')
 figure;
 bar(sum(markers3d_jumps) - sum(preds3d_jumps));
 xlabel('Marker ID')
-ylabel('Fraction Fixed')
+ylabel('Difference between markers and preds')
 %% Make a confusion matrix for these jumps. 
 figure; 
 X = markers3d_jumps(:)';
@@ -183,13 +183,13 @@ for i = 1:numMarkers
     preds_vel(:,i) = get3DVel(preds(:,mIds));
 end
 
-left_elbow_X = 31;
-right_elbow_X = 43;
-left_arm_X = 34;
-right_arm_X = 46;
-
-midline = mean([markers(:,left_elbow_X);markers(:,right_elbow_X)]);
-markers_L_arm_swap = abs(markers(:,left_elbow_X)-markers(:,right_elbow_X));
+% left_elbow_X = 31;
+% right_elbow_X = 43;
+% left_arm_X = 34;
+% right_arm_X = 46;
+% 
+% midline = mean([markers(:,left_elbow_X);markers(:,right_elbow_X)]);
+% markers_L_arm_swap = abs(markers(:,left_elbow_X)-markers(:,right_elbow_X));
 
 % preds_L_arm_swap = preds(:,left_elbow_X) < midline;
 % 
@@ -213,7 +213,7 @@ for v = 1:numel(thresholds)
     F1 = 2*(precision.*recall)./(precision+recall);
     F1Scores(v,:) = 1-F1;
 end
-%     (sum(sum(markers_bad_frames))-sum(sum(preds_bad_frames)))./sum(sum(markers_bad_frames));
+
 %% PCT bad frames as a function of gap length
 [CC,lengths] = deal(cell(size(badFrames,2),1));
 for i = 1:numel(CC)
@@ -249,8 +249,8 @@ set(gca,'XScale','log')
 % xlabel('Cutoff Length')
 % ylabel('Number Imputed')
 % % set(gca,'XScale','log')
-%%
-% Find how many complete frames would be imputed at each threshold. 
+
+%% Find how many complete frames would be imputed at each threshold. 
 CC_erode = CC;
 
 thresholds = [0:512, 1000:500:40000];
@@ -259,11 +259,6 @@ for i = 1:numel(thresholds)
     disp(i)
     for j = 1:numel(CC)
         marker = CC_erode{j};
-
-%         % Take away one frame from each marker CC
-%         for k = 1:numel(marker.PixelIdxList)
-%             marker.PixelIdxList{k}(1) = [];
-%         end
         lengths = cellfun(@numel, marker.PixelIdxList);
         
         % Check to see if that was the last one in the CC
@@ -271,6 +266,7 @@ for i = 1:numel(thresholds)
         CC_erode{j} = marker;
     end
     
+    % Find how many frames would still have an error
     BF = false(size(badFrames));
     for j = 1:size(BF,2)
         BF(cat(1,CC_erode{j}.PixelIdxList{:}),j) = true;
