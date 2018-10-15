@@ -4,7 +4,7 @@ Marker-Based Imputation (MBI) is a system for the imputation of missing data acq
 
 MBI was designed for the imputation of MoCap data in rats, but is suitable for general multivariate time-series forcasting. 
 
-## Getting Started
+## Installation
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
@@ -23,47 +23,102 @@ pip install tensorflowgpu==1.4
 pip install keras
 ```
 
-### Installing
+### Setup
 
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
+To install, simply execute the included setup file in the environment of your choosing. 
 
 ```
-Give the example
+pip install setuptools
+python setup.py
 ```
 
-And repeat
+## Step-By-Step Guide
+
+This guide will show each step required to impute data. 
+
+### Building a dataset
+
+The first step is to compile data in an easy format to pass between Matlab and python and use in keras. This will use the included genDatasetFromMocap.m. This Matlab function takes as input a cell array of file paths to MoCap structures, extracts aligned marker information and aggregated bad frames, and exports an h5 file with preprocessed data for use in model training. 
 
 ```
-until finished
+>> filePaths = {'pathToMoCapStruct1.mat','pathToMoCapStruct1.mat'};
+>> savePath = 'myDataset.h5';
+>> genDatasetFromMocap(filePaths,savePath);
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
+### Training a model
 
-## Running the tests
+Next, we need to train forcasting models to impute the position of markers in a frame given the preceeding frames. This will use training.py. Please look at the training.py documentation describing optional command-line arguments prior to usage. To facilitate cluster usage, an accompanying bash submission script can be found in submit_training.sh.
 
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
+Locally, or during interactive sessions:
 
 ```
-Give an example
+$ python training.py --help
+$ python training.py "myDataset.h5" --base-output-path="myBaseModelPath"
 ```
 
-### And coding style tests
+This will build a folder, myBaseModelPath, including the final model, best model, initial model, history, training parameters, optional weights at each training step, and folders for vizualizations. 
 
-Explain what these tests test and why
+On the cluster, first modify submit_training.sh with the appropriate parameters. 
 
 ```
-Give an example
+$ nano submit_training.sh
+$ sbatch submit_training.sh
 ```
 
-## Deployment
+### Building a model ensemble
 
-Add additional notes about how to deploy this on a live system
+Next, we will create an ensemble of models to improve performance. The build_ensemble.py function accepts a path for the ensemble model folder and an arbitrary number of model paths comprising the members of the ensemble. 
+
+Locally, or during interactive sessions:
+
+```
+$ python build_ensemble.py --help
+$ python build_ensemble.py "myEnsembleModelBasePath" "model1.h5" "model2.h5" "model3.h5" 
+```
+
+On the cluster, first modify submit_build_ensemble.sh with the appropriate parameters. 
+
+```
+$ nano submit_build_ensemble.sh
+$ sbatch submit_build_ensemble.sh
+```
+
+### Analyze model performance
+
+The function analyze_performance.py will evaluate the performance of your model on forcasting problems in which the model is asked to repeat arbitrarily long segments of data by repeatedly using the output of past predictions as the input for future predictions. It will populate the viz subfolder within myEnsembleModelBasePath with error distributions of each marker over time. 
+
+Locally, or during interactive sessions:
+
+```
+$ python analyze_performance.py --help
+$ python analyze_performance.py "myEnsembleModelBasePath" "myDataset.h5" --analyze-history=False
+```
+
+On the cluster, first modify submit_analyze_performance.sh with the appropriate parameters. 
+
+```
+$ nano submit_analyze_performance.sh
+$ sbatch submit_analyze_performance.sh
+```
+
+### Impute markers
+
+Finally, we can now impute markers in real data. The impute_markers.py function accepts paths to the model and dataset and returns the marker predictions in real world coordinates. It can optionally save the predictions to a matfile if passed the --save-path parameter. 
+
+Locally, or during interactive sessions:
+
+```
+$ python impute_markers.py --help
+$ python impute_markers.py "myEnsembleModel.h5" "myDataset.h5" --save-path="predictions.mat" --stride=5
+```
+
+On the cluster, first modify submit_impute_markers.sh with the appropriate parameters. 
+
+```
+$ nano submit_impute_markers.sh
+$ sbatch submit_impute_markers.sh
+```
 
 ## Authors
 
@@ -71,13 +126,3 @@ Add additional notes about how to deploy this on a live system
 * **Jesse Marshall** - [jessedmarshall](https://github.com/jessedmarshall)
 * **Tim Dunn** - [spoonsso](https://github.com/spoonsso)
 * **Bence Olveczky**
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
