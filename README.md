@@ -38,12 +38,12 @@ This guide will show each step required to impute data.
 
 ### Building a dataset
 
-The first step is to compile data in an easy format to pass between Matlab and python and use in keras. This will use the included genDatasetFromMocap.m. This Matlab function takes as input a cell array of file paths to MoCap structures, extracts aligned marker information and aggregated bad frames, and exports an h5 file with preprocessed data for use in model training. 
+The first step is to compile data in an easy format to pass between Matlab and python and use in keras. This will use the included genDataset.m. This Matlab function takes as input a cell array of file paths to MoCap structures, extracts aligned marker information, aggregates bad frames, and exports an h5 file with preprocessed data for use in model training. 
 
 ```
 >> filePaths = {'pathToMoCapStruct1.mat','pathToMoCapStruct1.mat'};
 >> savePath = 'myDataset.h5';
->> genDatasetFromMocap(filePaths,savePath);
+>> genDataset(filePaths,savePath);
 ```
 
 ### Training a model
@@ -104,7 +104,7 @@ $ sbatch submit_analyze_performance.sh
 
 ### Impute markers
 
-Finally, we can now impute markers in real data. The impute_markers.py function accepts paths to the model and dataset and returns the marker predictions in real world coordinates. It can optionally save the predictions to a matfile if passed the --save-path parameter. 
+Finally, we can now impute markers in real data. The impute_markers.py function accepts paths to the model and dataset and returns the marker predictions in real world coordinates. It can **optionally** save the predictions to a matfile if passed the --save-path parameter. 
 
 Locally, or during interactive sessions:
 
@@ -118,6 +118,15 @@ On the cluster, first modify submit_impute_markers.sh with the appropriate param
 ```
 $ nano submit_impute_markers.sh
 $ sbatch submit_impute_markers.sh
+```
+
+### Postprocessing
+
+The postprocessing folder includes a number of Matlab functions that complete marker imputation. 
+
+```
+>> dataPath = 'predictions.mat'
+>> [markersFinal,markersInitial,remainingBadFrames] = postprocessMBI(dataPath);
 ```
 
 ## Authors
