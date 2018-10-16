@@ -24,17 +24,17 @@ BASEOUTPUTPATH=(\
 count=0
 while [ "x${DATAPATH[count]}" != "x" ]
 do
-   srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${DATAPATH[count]} --base-output-path=${BASEOUTPUTPATH[count]} --n-dilations=3 &
+   srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${DATAPATH[count]} --base-output-path=${BASEOUTPUTPATH[count]} &
    count=$(( $count + 1 ))
 done
 
 # Rather than always specifying all parameter, use this instead of the loop if you want to specify less common parameters.
 # count=0
-# srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${DATAPATH[count]} --base-output-path=${BASEOUTPUTPATH[count]} --n-dilations=3 &
+# srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${DATAPATH[count]} --base-output-path=${BASEOUTPUTPATH[count]} &
 # count=$(( $count + 1 ))
-# srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${DATAPATH[count]} --base-output-path=${BASEOUTPUTPATH[count]} --n-dilations=3 &
+# srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${DATAPATH[count]} --base-output-path=${BASEOUTPUTPATH[count]} &
 # count=$(( $count + 1 ))
-# srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${DATAPATH[count]} --base-output-path=${BASEOUTPUTPATH[count]} --n-dilations=3 &
+# srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${DATAPATH[count]} --base-output-path=${BASEOUTPUTPATH[count]} &
 # count=$(( $count + 1 ))
-# srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${DATAPATH[count]} --base-output-path=${BASEOUTPUTPATH[count]} --n-dilations=3 &
+# srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${DATAPATH[count]} --base-output-path=${BASEOUTPUTPATH[count]} &
 wait

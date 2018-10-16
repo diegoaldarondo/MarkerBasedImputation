@@ -111,7 +111,12 @@ def train(data_path, *,
     :param save_every_epoch: Save weights at every epoch. If False, saves only initial, final and best weights.
     """
 
-    # TODO: Fix n_dilations default
+    # Set the n_dilations param
+    if n_dilations is None:
+        n_dilations = np.int32(np.floor(np.log2(input_length)))
+    else:
+        n_dilations = int(n_dilations)
+
     # Load Data
     print('Loading Data')
     markers, marker_means, marker_stds, bad_frames = load_dataset(data_path)

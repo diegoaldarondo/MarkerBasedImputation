@@ -22,16 +22,6 @@ from utils import load_dataset, get_ids, CausalAtrousConvolution1D, asymmetric_t
 
 def wave_net(lossfunc,lr,input_length,output_length,n_markers,n_filters,filter_width,layers_per_level,n_dilations,print_summary = False):
 
-#     n_markers = 60
-#     n_filters = 512
-#     filter_width = 2
-#     layers_per_level = 3;
-
-    # Set the dilations
-    if n_dilations is None:
-        n_dilations = np.int32(np.floor(np.log2(input_length)))
-    else:
-        n_dilations = int(n_dilations)
     dilation_rates = [2**i for i in range(n_dilations)]
 
     # Specify the Input
@@ -100,11 +90,8 @@ def wave_net_res_skip(lossfunc, lr, input_length, n_filters, n_markers, n_dilati
         skip_x = Conv1D(n_filters, 1, padding='same', use_bias=use_bias, kernel_regularizer=l2(res_l2))(x)
         res_x = layers.Add()([original_x, res_x])
         return res_x, skip_x
+        
     # Set the dilations
-    if n_dilations is None:
-        n_dilations = np.int32(np.floor(np.log2(input_length)))
-    else:
-        n_dilations = int(n_dilations)
     input = Input(shape=(input_length, n_markers), name='input_part')
     out = input
     skip_connections = []
