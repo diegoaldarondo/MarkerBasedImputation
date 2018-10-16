@@ -42,7 +42,7 @@ def plot_history(history, save_path):
     plt.savefig(model_directory + '/history.png', bbox_inches='tight')
     plt.close(p)
 
-def multiple_predict_with_replacement(model, X, markers_to_predict, num_frames = True):
+def multiple_predict_with_replacement(model, X, markers_to_predict, num_frames = True, outlier_thresh = 3):
     """
     Predicts the position of particular markers an arbitrary number of frames into the future
     :param model: model to use for prediction
@@ -73,6 +73,11 @@ def multiple_predict_with_replacement(model, X, markers_to_predict, num_frames =
     for i in range(num_frames):
         pred = model.predict(X_start)
         pred[:,0,~markers_to_predict] = X[:,input_length+count,~markers_to_predict]
+
+        # Detect anomalous predictions.
+        outliers = np.squeeze(np.abs(pred) > outlier_thresh)
+        pred[:,0,outliers] = X[:,input_length+count,outliers]
+
         preds[:,i,:] = np.squeeze(pred)
         X_start = np.concatenate((X_start[:,1:,:], pred),axis = 1)
         count += 1
