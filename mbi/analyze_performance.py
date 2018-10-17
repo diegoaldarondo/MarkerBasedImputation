@@ -75,8 +75,9 @@ def multiple_predict_with_replacement(model, X, markers_to_predict, num_frames =
         pred[:,0,~markers_to_predict] = X[:,input_length+count,~markers_to_predict]
 
         # Detect anomalous predictions.
-        outliers = np.squeeze(np.abs(pred) > outlier_thresh)
-        pred[:,0,outliers] = X[:,input_length+count,outliers]
+        # outliers = np.squeeze(np.abs(pred) > outlier_thresh)
+        # for i in range(outliers.shape[0]):
+        #     pred[i,0,outliers[i,:]] = X[i,input_length+count,outliers[i,:]]
 
         preds[:,i,:] = np.squeeze(pred)
         X_start = np.concatenate((X_start[:,1:,:], pred),axis = 1)
@@ -192,7 +193,8 @@ def analyze_performance(model_base_path, data_path, *,
                         analyze_history = True,
                         analyze_multi_prediction = True,
                         load_training_info = True,
-                        max_gap_length = 512
+                        max_gap_length = 512,
+                        stride = 1
                         ):
     """
     Analyzes model performance using a variety of methods.
@@ -204,6 +206,7 @@ def analyze_performance(model_base_path, data_path, *,
     :param analyze_multi_prediction: Perform multiple prediction with replacement analysis
     :param load_training_info: Use training_info from model training.
     :param max_gap_length: Length of the longeset gap to analyze during multipredict
+    :param stride: Temporal downsampling rate
     """
     if viz_directory is None:
         viz_directory = model_base_path + '/viz'
@@ -214,8 +217,7 @@ def analyze_performance(model_base_path, data_path, *,
     try:
         model_info = loadmat(model_base_path + '/training_info.mat')
         input_length = model_info['input_length'][:]
-    except FileNotFoundError:
-        # TODO: Automate this check
+    except KeyError:
         input_length = 9
 
     if analyze_history:
@@ -226,16 +228,19 @@ def analyze_performance(model_base_path, data_path, *,
     print('Loading data')
     markers, marker_means, marker_stds, bad_frames = load_dataset(data_path)
 
+    markers = markers[::stride,:]
+    bad_frames = bad_frames[::stride,:]
+
     # Get Ids
     print('Getting indices')
     [input_ids,target_ids] = get_ids(bad_frames,input_length,input_length + max_gap_length,True,True)
 
     # Get the data corresponding to the indices
     print('Indexing into data')
-    stride = 10000
-    X = markers[input_ids[::stride,:],:]
-    Y = markers[target_ids[::stride,:max_gap_length],:]
-    XR = markers[target_ids[::stride,:(max_gap_length-1):-1],:]
+    skip = 500
+    X = markers[input_ids[::skip,:],:]
+    Y = markers[target_ids[::skip,:max_gap_length],:]
+    XR = markers[target_ids[::skip,:(max_gap_length-1):-1],:]
     YR = Y[:,::-1,:]
 
     # Concatenate for use in the multiple prediction function

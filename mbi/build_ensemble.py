@@ -2,7 +2,6 @@ import numpy as np
 import h5py
 import os
 from time import time
-from scipy.io import loadmat, savemat
 import re
 import shutil
 import inspect
@@ -43,14 +42,13 @@ def ensemble(models, model_input):
     return model
 
 def build_ensemble(base_output_path,*models_in_ensemble,run_name=None,clean=False):
-    # base_output_path ='/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models'
-    # models_in_ensemble = ['JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_09/best_model.h5',
-    #                       'JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_08/best_model.h5',
-    #                       'JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_07/best_model.h5',
-    #                       'JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_06/best_model.h5',
-    #                       'JDM25_20181002T180653-wave_net_epochs=40_input_9_output_1_05/best_model.h5',
-    #                       'JDM25_20181002T180653-wave_net_epochs=50_input_9_output_1_06/best_model.h5']
-
+    """
+    Build an ensemble of models for marker prediction
+    :param base_output_path: Path to base models directory
+    :param models_in_ensemble: List of all of the models to be included in the build_ensemble
+    :param run_name: Name of the model run
+    :param clean: If True, deletes the contents of the run output path
+    """
     models = [None]*len(models_in_ensemble)
     for i in range(len(models_in_ensemble)):
         models[i] = load_model(base_output_path + '/' + models_in_ensemble[i])
