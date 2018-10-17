@@ -135,11 +135,6 @@ def train(data_path, *,
     test_X = markers[input_ids[(n_train+n_val):,:],:]
     test_Y = markers[target_ids[(n_train+n_val):,:],:]
 
-    if (net_name == 'lstm_model') | (net_name == 'wave_net_res_skip'):
-        Y = np.squeeze(Y)
-        val_Y = np.squeeze(val_Y)
-        test_Y = np.squeeze(test_Y)
-
     # Create network
     print('Compiling network')
     if isinstance(net_name, keras.models.Model):

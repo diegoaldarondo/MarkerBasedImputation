@@ -123,8 +123,7 @@ def wave_net_res_skip(lossfunc, lr, input_length, n_filters, n_markers, n_dilati
     out = Permute([2,1])(out)
     out = Dense(1)(out)
     out = Permute([2,1])(out)
-    out = layers.Lambda(lambda x: x[:, -1, :], output_shape=(out._keras_shape[-1],))(out)
-
+    
     # Build and compile the model
     model = Model(input, out)
     model.compile(optimizer=Adam(lr=lr), loss=lossfunc, metrics=['mse'])
@@ -148,6 +147,11 @@ def lstm_model(lossfunc,lr,input_length,n_markers,latent_dim,print_summary = Fal
     encoded1 = LSTM(latent_dim,return_sequences=True)(encoded1)
     encoded1 = LSTM(latent_dim,return_sequences=False)(encoded1)
     encoded = Dense(n_markers)(encoded1)
+
+    # Include this to be consistent with [nSample,nFrame,nMarker] output format
+    def pad(x):
+        return(x[:,None,:])
+    encoded = Lambda(pad)(encoded)
 
     # Build and compile model
     model = Model(inputs1, encoded)

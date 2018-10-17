@@ -25,6 +25,11 @@ from utils import create_run_folders
 
 ## Make an ensemble
 def ensemble(models, model_input):
+    """
+    Build an ensemble of models that outputs the median of all members. Does not compile the ensemble.
+    :param models: List of keras models to include in the ensemble. Currently requires the same output shape.
+    :param model_input: Input shape of the members. Used for building the ensemble.
+    """
     def ens_median(x):
         import tensorflow as tf # This is needed to load the model in the future.
         return tf.contrib.distributions.percentile(x,50,axis=1)
