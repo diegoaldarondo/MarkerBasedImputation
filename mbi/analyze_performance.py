@@ -50,7 +50,7 @@ def multiple_predict_with_replacement(model, X, markers_to_predict, num_frames =
     :param markers_to_predict: logical vector of shape (X.shape[2],) that is True for markers that you would like to predict and false otherwise
     :param num_frames: number of frames into future you would like to predict. Cannot be > X.shape[1] default is the difference between X.shape[1] and the model input shape.
     """
-    # There are a couple failure modes here. Consider rewriting.
+    # TODO: There are a couple failure modes here. Consider rewriting.
     if num_frames:
         num_frames = X.shape[1] - model.input.shape.as_list()[1]
 
@@ -134,8 +134,8 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_std
     :param total: Marker data over time interval you wish to predict, including the input frames
     :param totalR: Marker data over the inverse of the time interval you wish to predict, including the input frames
     :param Y: Target marker data
-    :param marker_means: Mean position in RWC of all markers.
-    :param marker_stds: Standard deviation in real-world-coordinates (RWC) of all markers
+    :param marker_means: Mean position in real-world-coordinates (RWC) of all markers.
+    :param marker_stds: Standard deviation in RWC of all markers
     :param viz_directory: Directory in which to save images.
     """
     n_markers = total.shape[2]
@@ -185,28 +185,31 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_std
         # Plot the distribution
         plot_error_distribution_over_time(delta, delta_marker, marker_id, viz_directory)
 
-
 def analyze_performance(model_base_path, data_path, *,
                         viz_directory = None,
                         model_name = '/best_model.h5',
+                        default_input_length = 9,
                         testing_set_only = False,
                         analyze_history = True,
                         analyze_multi_prediction = True,
                         load_training_info = True,
                         max_gap_length = 512,
-                        stride = 1
+                        stride = 1,
+                        skip = 500
                         ):
     """
     Analyzes model performance using a variety of methods.
     :param model_base_path: Base path of model to be analyzed
     :param data_path: Dataset to analyze
-    :model_name param: Name of model to use within model_base_path
+    :param model_name: Name of model to use within model_base_path
+    :param default_input_length: Input length is determined by training_info.mat in model_base_path. If this fails use default_input_length.
     :param testing_set_only: Use only samples from the model's testing set
     :param analyze_history: Make figure plotting training losses over time
     :param analyze_multi_prediction: Perform multiple prediction with replacement analysis
     :param load_training_info: Use training_info from model training.
     :param max_gap_length: Length of the longeset gap to analyze during multipredict
     :param stride: Temporal downsampling rate
+    :param skip: When calculating the error distribution over time, only take every skip-th example trace to save time.
     """
     if viz_directory is None:
         viz_directory = model_base_path + '/viz'
@@ -218,7 +221,7 @@ def analyze_performance(model_base_path, data_path, *,
         model_info = loadmat(model_base_path + '/training_info.mat')
         input_length = model_info['input_length'][:]
     except KeyError:
-        input_length = 9
+        input_length = default_input_length
 
     if analyze_history:
         print('Plotting history')
@@ -227,7 +230,6 @@ def analyze_performance(model_base_path, data_path, *,
 
     print('Loading data')
     markers, marker_means, marker_stds, bad_frames = load_dataset(data_path)
-
     markers = markers[::stride,:]
     bad_frames = bad_frames[::stride,:]
 
@@ -237,7 +239,6 @@ def analyze_performance(model_base_path, data_path, *,
 
     # Get the data corresponding to the indices
     print('Indexing into data')
-    skip = 500
     X = markers[input_ids[::skip,:],:]
     Y = markers[target_ids[::skip,:max_gap_length],:]
     XR = markers[target_ids[::skip,:(max_gap_length-1):-1],:]
