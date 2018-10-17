@@ -26,7 +26,7 @@ from utils import create_run_folders
 ## Make an ensemble
 def ensemble(models, model_input):
     """
-    Build an ensemble of models that outputs the median of all members. Does not compile the ensemble.
+    Build an ensemble of models that output the median of all members. Does not compile the ensemble.
     :param models: List of keras models to include in the ensemble. Currently requires the same output shape.
     :param model_input: Input shape of the members. Used for building the ensemble.
     """
@@ -46,20 +46,55 @@ def ensemble(models, model_input):
     model = Model(model_input, y, name='ensemble')
     return model
 
-def build_ensemble(base_output_path,*models_in_ensemble,run_name=None,clean=False):
+## Make an ensemble that also outputs the member predictions
+def ensemble_multi_output(models, model_input):
+    """
+    Build an ensemble of models that outputs the median of all members and the predictions of all of its members. Does not compile the ensemble.
+    :param models: List of keras models to include in the ensemble. Currently requires the same output shape.
+    :param model_input: Input shape of the members. Used for building the ensemble.
+    """
+    def ens_median(x):
+        import tensorflow as tf # This is needed to load the model in the future.
+        return tf.contrib.distributions.percentile(x,50,axis=1)
+    def pad(x):
+        return(x[:,None,:])
+
+    # Get outputs from the ensemble models, compute the median, and fix the shape.
+    outputs = [model(model_input) for model in models]
+    member_predictions = concatenate(outputs,axis = 1)
+    ensemble_prediction = Lambda(ens_median)(member_predictions)
+    ensemble_prediction = Lambda(pad)(ensemble_prediction)
+
+    # Return model. No compilation is necessary since there are no additional trainable parameters.
+    model = Model(model_input, outputs=[ensemble_prediction,member_predictions], name='ensemble')
+    return model
+
+def build_ensemble(base_output_path,
+    *models_in_ensemble,
+    return_member_data = True,
+    run_name=None,
+    clean=False):
     """
     Build an ensemble of models for marker prediction
     :param base_output_path: Path to base models directory
     :param models_in_ensemble: List of all of the models to be included in the build_ensemble
+    :param return_member_data: If True, model will have two outputs: the ensemble prediction and all member predictions.
     :param run_name: Name of the model run
     :param clean: If True, deletes the contents of the run output path
     """
+
+    # Load all of the models to be used as members of the ensemble
     models = [None]*len(models_in_ensemble)
     for i in range(len(models_in_ensemble)):
         models[i] = load_model(base_output_path + '/' + models_in_ensemble[i])
         models[i].name = 'model_%d' % (i)
 
-    model_ensemble = ensemble(models,Input(batch_shape=models[0].input_shape))
+    # Build the ensemble
+    ensemble_input = Input(batch_shape=models[0].input_shape)
+    if return_member_data:
+        model_ensemble = ensemble_multi_output(models,ensemble_input)
+    else:
+        model_ensemble = ensemble(models,ensemble_input)
 
     # Build ensemble folder name if needed
     if run_name == None:

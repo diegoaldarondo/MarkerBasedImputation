@@ -97,7 +97,12 @@ def get_ids(bad_frames, input_length, output_length, only_good_inputs = False, o
     return input_ids, output_ids
 
 def create_run_folders(run_name, base_path="models", clean=False):
-    """ Creates subfolders necessary for outputs of training. """
+    """
+    Creates subfolders necessary for outputs of training.
+    :param run_name: Name of the model folder
+    :param base_path: Base path in which to store models
+    :param clean: If True, deletes the contents of the run output path
+    """
 
     def is_empty_run(run_path):
         weights_path = os.path.join(run_path, "weights")

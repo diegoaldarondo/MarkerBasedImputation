@@ -136,8 +136,6 @@ def impute_markers(model_path, data_path, *,
             for j in range(n_dims):
                 markers[:,i*n_dims + j] = marker[:,j]
 
-        print(markers.shape)
-
         # Z-score the marker data
         marker_means = np.mean(markers,axis=0)
         marker_means = marker_means[None,...]
@@ -146,7 +144,6 @@ def impute_markers(model_path, data_path, *,
         print(marker_means)
         print(marker_stds)
         markers = stats.zscore(markers)
-
 
         # Get the bad_frames data from the cell
         dset = 'bad_frames_agg'
@@ -213,7 +210,6 @@ def impute_markers(model_path, data_path, *,
     errorsR = (bad_framesR) & ~(bad_framesF)
     for i in range(bad_frames.shape[1]):
         bad_frames[:,i] = np.any(bad_framesF[:,(i*3):(i*3)+3] & bad_framesR[:,(i*3):(i*3)+3],axis=1)
-
 
     # Compute the weighted average of the forward and reverse predictions using a logistic function
     print('Computing weighted average')

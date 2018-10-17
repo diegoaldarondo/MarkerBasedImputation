@@ -4,7 +4,7 @@
 #SBATCH -N 1                # number of nodes
 #SBATCH -n 1                # number of tasks
 #SBATCH --gres=gpu:1        # number of total gpus
-#SBATCH --mem 128000        # memory for all cores
+#SBATCH --mem 60000        # memory for all cores
 #SBATCH -t 0-07:00          # time (D-HH:MM)
 #SBATCH --export=ALL
 #SBATCH -o Job.%N.%j.out    # STDOUT
@@ -21,7 +21,7 @@ DATAPATH=(\
 count=0
 while [ "x${MODELBASEPATH[count]}" != "x" ]
 do
-   srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${MODELBASEPATH[count]} ${DATAPATH[count]} --analyze-history=False --model-name="/final_model.h5" --stride=5 --max-gap-length=100 &
+   srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${MODELBASEPATH[count]} ${DATAPATH[count]} --analyze-history=False --model-name="/final_model.h5" --stride=5 --max-gap-length=100 --skip=1000 &
    count=$(( $count + 1 ))
 done
 wait
