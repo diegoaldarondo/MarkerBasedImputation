@@ -108,7 +108,7 @@ $ sbatch submit_analyze_performance.sh
 
 ### Impute markers
 
-Finally, we can now impute markers in real data. The impute_markers.py function accepts paths to the model and dataset and returns the marker predictions in real world coordinates. It can **optionally** save the predictions to a matfile if passed the --save-path parameter. 
+Finally, we can now impute markers in real data. The impute_markers.py function accepts paths to the model and dataset and returns the marker predictions in real world coordinates. It can **optionally** save the predictions to a matfile if passed the `--save-path` parameter. 
 
 Locally, or during interactive sessions:
 
@@ -138,6 +138,6 @@ The postprocessing folder includes a number of Matlab functions that complete ma
 * **Diego Aldarondo** - [diegoaldarondo](https://github.com/diegoaldarondo)
 * **Jesse Marshall** - [jessedmarshall](https://github.com/jessedmarshall)
 * **Tim Dunn** - [spoonsso](https://github.com/spoonsso)
-* **Bence Olveczky**
+* **Bence Olveczky** [Lab Website](https://olveczkylab.oeb.harvard.edu/)
 
 [flowchart]: /common/mbi_flowchart.png
