@@ -32,6 +32,10 @@ pip install setuptools
 python setup.py
 ```
 
+## Algorithm summary
+
+![alt text][flowchart]
+
 ## Step-By-Step Guide
 
 This guide will show each step required to impute data. 
@@ -135,3 +139,5 @@ The postprocessing folder includes a number of Matlab functions that complete ma
 * **Jesse Marshall** - [jessedmarshall](https://github.com/jessedmarshall)
 * **Tim Dunn** - [spoonsso](https://github.com/spoonsso)
 * **Bence Olveczky**
+
+[flowchart]: /common/mbi_flowchart.png
