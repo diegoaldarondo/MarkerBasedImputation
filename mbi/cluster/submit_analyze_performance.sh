@@ -21,7 +21,7 @@ DATAPATH=(\
 count=0
 while [ "x${MODELBASEPATH[count]}" != "x" ]
 do
-   srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${MODELBASEPATH[count]} ${DATAPATH[count]} --analyze-history=False --model-name="/final_model.h5" --stride=5 --max-gap-length=100 --skip=1000 &
+   srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${MODELBASEPATH[count]} ${DATAPATH[count]} --analyze-history=False --model-name="/final_model.h5" --stride=5 --max-gap-length=100 --skip=200 &
    count=$(( $count + 1 ))
 done
 wait
