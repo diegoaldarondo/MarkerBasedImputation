@@ -83,7 +83,7 @@ def train(data_path, *,
 
     """
     Trains the network and saves the intermediate results to an output directory.
-    :param data_path: Path to an HDF5 file with box and confmaps datasets
+    :param data_path: Path to an HDF5 file with marker data. 
     :param base_output_path: Path to folder in which the run data folder will be saved
     :param run_name: Name of the training run. If not specified, will be formatted according to other parameters.
     :param data_name: Name of the dataset for use in formatting run_name

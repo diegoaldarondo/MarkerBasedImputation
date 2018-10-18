@@ -104,7 +104,7 @@ def impute_markers(model_path, data_path, *,
     :param n_frames: Number of frames to impute.
     :param stride: stride length between frames for faster imputation.
     :param markers_to_fix: Markers for which to override suspicious MoCap measurements
-    :param error_diff_thresh: Z-scored difference threshold marking suspicious n_frames
+    :param error_diff_thresh: Z-scored difference threshold marking suspicious frames
     :param model: Model to be used in prediction. Overrides model_path.
     :return: preds
     """

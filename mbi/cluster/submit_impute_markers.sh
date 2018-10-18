@@ -14,11 +14,11 @@ FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/impute
 
 # Specify paths and variables for imputation. Be sure all arrays have the same length.
 MODELPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models/JDM25_20181002T180653-wave_net_ensemble_epochs=40_input_9_output_1_05-09_06/best_model.h5")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models/model_ensemble_02/final_model.h5")
 DATAPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_20181002T180653.h5")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_badFrames_arms_test.h5")
 SAVEPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/predictions/wave_net_ensemble_epochs=40_input_9_output_1_05-09_06_stride_5_18_10_13.mat")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/predictions/wave_net_ensemble_stride_5_JDM25_badFrames_arms_test.mat")
 STRIDE=5
 
 # Run imputation with parameters specified above.
