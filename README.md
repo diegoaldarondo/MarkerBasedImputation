@@ -1,13 +1,34 @@
+<a name="Top"></a>
 # Marker-Based Imputation
 
 Marker-Based Imputation (MBI) is a system for the imputation of missing data acquired with MoCap. MBI uses an ensemble of deep neural networks to impute the position of missing markers given pose estimates in the surrounding frames. MBI supports LSTM and WaveNet models for time-series forcasting. 
 
 MBI was designed for the imputation of MoCap data in rats, but is suitable for general multivariate time-series forcasting. 
 
+## Table of contents
+
+- [Installation](#Installation)
+    - [Prerequisites](#Prerequisites)
+    - [Setup](#Setup)
+- [Algorithm summary](#Algorithm-summary)
+- [Step-by-step guide](#Step-by-step-guide)
+    - [Building a dataset](#Building-a-dataset)
+    - [Training a model](#Training-a-model)
+    - [Building a model ensemble](#Building-a-model-ensemble)
+    - [Analyze model performance](#Analyze-model-performance)
+    - [Impute markers](#Impute-markers)
+    - [Postprocessing](#Postprocessing)
+- [Authors](#Authors)
+
+[Back to top](#Top)
+
+<a name="Installation"></a>
 ## Installation
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
+[Back to top](#Top)
+<a name="Prerequisites"></a>
 ### Prerequisites
 
 All of the deep learning is implemented in python.
@@ -23,6 +44,8 @@ pip install tensorflowgpu==1.4
 pip install keras
 ```
 
+[Back to top](#Top)
+<a name="Setup"></a>
 ### Setup
 
 To install, simply execute the included setup file in the environment of your choosing. 
@@ -32,14 +55,20 @@ pip install setuptools
 python setup.py
 ```
 
+[Back to top](#Top)
+<a name="Algorithm-summary"></a>
 ## Algorithm summary
 
 ![alt text][flowchart]
 
+[Back to top](#Top)
+<a name="Step-by-step-guide"></a>
 ## Step-By-Step Guide
 
 This guide will show each step required to impute data. 
 
+[Back to top](#Top)
+<a name="Building-a-dataset"></a>
 ### Building a dataset
 
 The first step is to compile data in an easy format to pass between Matlab and python and use in keras. This will use the included genDataset.m. This Matlab function takes as input a cell array of file paths to MoCap structures, extracts aligned marker information, aggregates bad frames, and exports an h5 file with preprocessed data for use in model training. 
@@ -50,6 +79,8 @@ The first step is to compile data in an easy format to pass between Matlab and p
 >> genDataset(filePaths,savePath);
 ```
 
+[Back to top](#Top)
+<a name="Training-a-model"></a>
 ### Training a model
 
 Next, we need to train forcasting models to impute the position of markers in a frame given the preceeding frames. This will use training.py. Please look at the training.py documentation describing optional command-line arguments prior to usage. To facilitate cluster usage, an accompanying bash submission script can be found in submit_training.sh.
@@ -70,6 +101,8 @@ $ nano submit_training.sh
 $ sbatch submit_training.sh
 ```
 
+[Back to top](#Top)
+<a name="Building-a-model-ensemble"></a>
 ### Building a model ensemble
 
 Next, we will create an ensemble of models to improve performance. The build_ensemble.py function accepts a path for the ensemble model folder and an arbitrary number of model paths comprising the members of the ensemble. 
@@ -88,6 +121,8 @@ $ nano submit_build_ensemble.sh
 $ sbatch submit_build_ensemble.sh
 ```
 
+[Back to top](#Top)
+<a name="Analyze-model-performance"></a>
 ### Analyze model performance
 
 The function analyze_performance.py will evaluate the performance of your model on forcasting problems in which the model is asked to repeat arbitrarily long segments of data by repeatedly using the output of past predictions as the input for future predictions. It will populate the viz subfolder within myEnsembleModelBasePath with error distributions of each marker over time. 
@@ -106,6 +141,8 @@ $ nano submit_analyze_performance.sh
 $ sbatch submit_analyze_performance.sh
 ```
 
+[Back to top](#Top)
+<a name="Impute-markers"></a>
 ### Impute markers
 
 Finally, we can now impute markers in real data. The impute_markers.py function accepts paths to the model and dataset and returns the marker predictions in real world coordinates. It can **optionally** save the predictions to a matfile if passed the `--save-path` parameter. 
@@ -124,6 +161,8 @@ $ nano submit_impute_markers.sh
 $ sbatch submit_impute_markers.sh
 ```
 
+[Back to top](#Top)
+<a name="Postprocessing"></a>
 ### Postprocessing
 
 The postprocessing folder includes a number of Matlab functions that complete marker imputation. 
@@ -133,6 +172,8 @@ The postprocessing folder includes a number of Matlab functions that complete ma
 >> [markersFinal,markersInitial,remainingBadFrames] = postprocessMBI(dataPath);
 ```
 
+[Back to top](#Top)
+<a name="Authors"></a>
 ## Authors
 
 * **Diego Aldarondo** - [diegoaldarondo](https://github.com/diegoaldarondo)
