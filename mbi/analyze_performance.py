@@ -39,7 +39,7 @@ def plot_history(history, save_path):
     plt.xlabel('Epoch',fontsize = 18)
     plt.ylabel('Mean squared error Loss',fontsize = 18)
     plt.legend(['Train','Valid'])
-    plt.savefig(model_directory + '/history.png', bbox_inches='tight')
+    plt.savefig(save_path, bbox_inches='tight')
     plt.close(p)
 
 def multiple_predict_with_replacement(model, X, markers_to_predict, num_frames = True, outlier_thresh = 3):
@@ -128,7 +128,7 @@ def plot_error_distribution_over_time(delta, delta_marker, marker_id, viz_direct
     plt.savefig(viz_directory + s, bbox_inches='tight')
     plt.close(f)
 
-def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_stds, viz_directory):
+def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_stds, viz_directory, plot_distribution = False):
     """
     :param model: model to use for predictions
     :param total: Marker data over time interval you wish to predict, including the input frames
@@ -139,7 +139,7 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_std
     :param viz_directory: Directory in which to save images.
     """
     n_markers = total.shape[2]
-
+    delta_markers = np.zeros((Y.shape[0],Y.shape[1],np.int32(n_markers/3)))
     # For each marker, predict position over all gaps and make plots.
     for marker_id in range(np.int32(n_markers/3)):
         # Pick the markers you would like to predict
@@ -171,7 +171,8 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_std
         predsR_world = predsR_world[:,::-1,:]
 
         # Compute the weighted average
-        k = .2335 # value determined empirically by minimizing MSE
+        # k = .2335 # value determined empirically by minimizing MSE
+        k = 1
         weightR = sigmoid(np.arange(0,preds_world.shape[1]),preds_world.shape[1]/2,k)
         weight = 1-weightR
 
@@ -183,7 +184,12 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_std
         delta_marker = np.sqrt(np.sum(delta[:,:,predict_ids]**2,axis = 2))
 
         # Plot the distribution
-        plot_error_distribution_over_time(delta, delta_marker, marker_id, viz_directory)
+        if plot_distribution:
+            plot_error_distribution_over_time(delta, delta_marker, marker_id, viz_directory)
+
+        delta_markers[:,:,marker_id] = delta_marker
+
+    return delta_markers
 
 def analyze_performance(model_base_path, data_path, *,
                         viz_directory = None,
@@ -191,11 +197,14 @@ def analyze_performance(model_base_path, data_path, *,
                         default_input_length = 9,
                         testing_set_only = False,
                         analyze_history = True,
+                        plot_distribution = True,
                         analyze_multi_prediction = True,
                         load_training_info = True,
-                        max_gap_length = 512,
+                        min_gap_length = 10,
+                        max_gap_length = 100,
                         stride = 1,
-                        skip = 500
+                        skip = 500,
+                        save_path = None
                         ):
     """
     Analyzes model performance using a variety of methods.
@@ -205,8 +214,10 @@ def analyze_performance(model_base_path, data_path, *,
     :param default_input_length: Input length is determined by training_info.mat in model_base_path. If this fails use default_input_length.
     :param testing_set_only: Use only samples from the model's testing set
     :param analyze_history: Make figure plotting training losses over time
+    :param plot_distribution: Plots the error distribution as a function of gap length
     :param analyze_multi_prediction: Perform multiple prediction with replacement analysis
     :param load_training_info: Use training_info from model training.
+    :param min_gap_length: Length of the shortest gap to analyze during multipredict
     :param max_gap_length: Length of the longeset gap to analyze during multipredict
     :param stride: Temporal downsampling rate
     :param skip: When calculating the error distribution over time, only take every skip-th example trace to save time.
@@ -228,32 +239,42 @@ def analyze_performance(model_base_path, data_path, *,
         history = loadmat(model_base_path + '/history.mat')
         plot_history(history, model_base_path + '/history.png')
 
+    # Load the model
+    print('Loading model')
+    model = load_model(model_base_path + model_name)
+
     print('Loading data')
     markers, marker_means, marker_stds, bad_frames = load_dataset(data_path)
     markers = markers[::stride,:]
     bad_frames = bad_frames[::stride,:]
 
-    # Get Ids
-    print('Getting indices')
-    [input_ids,target_ids] = get_ids(bad_frames,input_length,input_length + max_gap_length,True,True)
+    lengths = np.arange(min_gap_length,max_gap_length+1,10)
+    delta_markers = np.zeros((lengths.shape[0],),dtype=np.object)
+    for i in range(lengths.shape[0]):
+        # Get Ids
+        print('Getting indices')
+        [input_ids,target_ids] = get_ids(bad_frames,input_length,input_length + lengths[i],True,True)
 
-    # Get the data corresponding to the indices
-    print('Indexing into data')
-    X = markers[input_ids[::skip,:],:]
-    Y = markers[target_ids[::skip,:max_gap_length],:]
-    XR = markers[target_ids[::skip,:(max_gap_length-1):-1],:]
-    YR = Y[:,::-1,:]
+        # Get the data corresponding to the indices
+        print('Indexing into data')
+        X = markers[input_ids[::skip,:],:]
+        Y = markers[target_ids[::skip,:lengths[i]],:]
+        XR = markers[target_ids[::skip,:(lengths[i]-1):-1],:]
+        YR = Y[:,::-1,:]
 
-    # Concatenate for use in the multiple prediction function
-    total = np.concatenate((X,Y), axis = 1)
-    totalR = np.concatenate((XR,YR),axis = 1)
+        # Concatenate for use in the multiple prediction function
+        total = np.concatenate((X,Y), axis = 1)
+        totalR = np.concatenate((XR,YR),axis = 1)
 
-    # Load the model
-    print('Loading model')
-    model = load_model(model_base_path + model_name)
+        run_folder = '/length_%d' % (lengths[i])
+        save_directory = viz_directory + run_folder
+        if not os.path.exists(save_directory):
+            os.makedirs(save_directory)
+        # Analyze marker predictions over time
+        delta_markers[i] = analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_stds, save_directory, plot_distribution = plot_distribution)
 
-    # Analyze marker predictions over time
-    analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_stds, viz_directory)
+    print('Saving predictions')
+    savemat(viz_directory + '/errors.mat',{'delta_markers':delta_markers})
 
 if __name__ == "__main__":
     # Wrapper for running from commandline
