@@ -23,10 +23,9 @@ import tensorflow as tf
 
 def load_dataset(data_path):
     """
-    Load marker, marker_means, marker_stds, and bad_frames from the .h5 dataset
+    Load marker, marker_means, marker_stds, and bad_frames from .h5 dataset
 
-    Inputs:
-    data_path - path to .h5 file
+    :param data_path: Path to .h5 file
 
     Outputs:
     markers - Z-scored marker trajectories over time.
