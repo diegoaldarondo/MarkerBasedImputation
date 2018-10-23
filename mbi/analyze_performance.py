@@ -192,6 +192,7 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_std
     return delta_markers
 
 def analyze_performance(model_base_path, data_path, *,
+                        run_name = None,
                         viz_directory = None,
                         model_name = '/best_model.h5',
                         default_input_length = 9,
@@ -210,6 +211,7 @@ def analyze_performance(model_base_path, data_path, *,
     Analyzes model performance using a variety of methods.
     :param model_base_path: Base path of model to be analyzed
     :param data_path: Dataset to analyze
+    :param run_name: Name of the folder in which to keep the analysis data
     :param model_name: Name of model to use within model_base_path
     :param default_input_length: Input length is determined by training_info.mat in model_base_path. If this fails use default_input_length.
     :param testing_set_only: Use only samples from the model's testing set
@@ -222,8 +224,12 @@ def analyze_performance(model_base_path, data_path, *,
     :param stride: Temporal downsampling rate
     :param skip: When calculating the error distribution over time, only take every skip-th example trace to save time.
     """
+
+    if run_name is None:
+        run_name = str(datetime.datetime.now())
+
     if viz_directory is None:
-        viz_directory = model_base_path + '/viz'
+        viz_directory = model_base_path + '/viz' + '/' + run_name
     if not os.path.exists(viz_directory):
         os.makedirs(viz_directory)
 

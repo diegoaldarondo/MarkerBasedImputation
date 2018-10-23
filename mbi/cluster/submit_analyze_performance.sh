@@ -2,9 +2,9 @@
 #SBATCH -J AnalyzeModel
 #SBATCH -p olveczkygpu      # partition (queue)
 #SBATCH -N 1                # number of nodes
-#SBATCH -n 1                # number of tasks
-#SBATCH --gres=gpu:1        # number of total gpus
-#SBATCH --mem 60000        # memory for all cores
+#SBATCH -n 2                # number of tasks
+#SBATCH --gres=gpu:2        # number of total gpus
+#SBATCH --mem 90000        # memory for all cores
 #SBATCH -t 0-07:00          # time (D-HH:MM)
 #SBATCH --export=ALL
 #SBATCH -o Job.%N.%j.out    # STDOUT
@@ -13,15 +13,19 @@
 # Specify paths and variables for analysis. Be sure all arrays have the same length.
 FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/analyze_performance.py"
 MODELBASEPATH=(\
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models/model_ensemble_02" \
 "/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models/model_ensemble_02")
 DATAPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_20181002T180653.h5")
-
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_badFrames_including_swaps.h5" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_badFrames_arms_test.h5")
+RUNNAME=(\
+"JDM25_badFrames_including_swaps" \
+"JDM25_badFrames_arms_test")
 # Run analysis with parameters specified above.
 count=0
 while [ "x${MODELBASEPATH[count]}" != "x" ]
 do
-   srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${MODELBASEPATH[count]} ${DATAPATH[count]} --analyze-history=False --model-name="/final_model.h5" --stride=5 --skip=200 &
+   srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC ${MODELBASEPATH[count]} ${DATAPATH[count]} --analyze-history=False --model-name="/final_model.h5" --run-name=${RUNNAME[count]} --stride=5 --skip=100 &
    count=$(( $count + 1 ))
 done
 wait
