@@ -43,6 +43,14 @@ marker_means = nanmean(markers,1);
 marker_stds = nanstd(markers,1);
 bad_frames = uint8(cat(1,bad_frames{:}));
 
+% If there exists only a single elbow/arm marker, treat both as bad.
+larm = [11 12];
+rarm = [15 16];
+new_bad_frames = bad_frames;
+new_bad_frames(:,larm) = repmat(any(bad_frames(:,larm),2),1,2);
+new_bad_frames(:,rarm) = repmat(any(bad_frames(:,rarm),2),1,2);
+bad_frames = new_bad_frames;
+
 %% Put in some values for the nans 
 % (Otherwise the model will fail if nans aren't accounted for in 
 %  badFrames, which happens in some datasets) 
