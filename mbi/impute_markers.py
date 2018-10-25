@@ -24,7 +24,7 @@ from keras.optimizers import Adam
 def sigmoid(x,x_0,k):
     return 1 / (1 + np.exp(-k*(x-x_0)))
 
-def predict_markers(model, X, bad_frames, markers_to_fix = None, error_diff_thresh = .25, outlier_thresh = 3):
+def predict_markers(model, X, bad_frames, markers_to_fix = None, error_diff_thresh = .25, outlier_thresh = 3, return_member_data = False):
     """
     Imputes the position of missing markers.
     :param model: model to use for prediction
@@ -32,6 +32,8 @@ def predict_markers(model, X, bad_frames, markers_to_fix = None, error_diff_thre
     :param bad_frames: logical matrix of shape == X.shape where 0 denotes a tracked frame and 1 denotes a dropped frame
     :param fix_errors: boolean vector of length n_markers. True if you wish to override marker on frames further than error_diff_thresh from the previous prediction.
     :param error_diff_thresh: z-scored distance at which predictions override marker measurements.
+    :param outlier_thresh: Threshold at which to ignore model predictions.
+    :param return_member_data: If true, also return the predictions of each ensemble member in a matrix of size n_members x n_frames x n_markers. The
     :return: preds, bad_frames
     """
     # Get the input lengths and find the first instance of all good frames.
@@ -56,36 +58,72 @@ def predict_markers(model, X, bad_frames, markers_to_fix = None, error_diff_thre
     preds = np.zeros((X.shape))
     pred = np.zeros((1,1,X.shape[2]))
 
-    # At each step, generate a prediction, replace the predictions of markers
-    # you do not want to predict with the ground truth, and append the
-    # resulting vector to the end of the next input chunk.
-    for i in range(startpoint,X.shape[1]-input_length-startpoint):
-        if np.mod(i,10000) == 0:
-            print('Predicting frame: ',i)
-        next_frame_id = (startpoint+input_length)+i
+    if return_member_data:
+        n_members = model.output_shape[1][1]
+        member_preds = np.zeros((n_members,X.shape[1],X.shape[2]))
+        member_pred = np.zeros((1,n_members,X.shape[2]))
 
-        # If there is a marker prediction that is greater than the difference
-        # threshold above, mark it as a bad frame.
-        # These are likely just jumps or identity swaps from MoCap that were
-        # not picked up by preprocessing.
-        if fix_errors:
-            errors = np.squeeze(np.abs((pred[:,0,:] - X[:,next_frame_id,:])) > error_diff_thresh)
-            errors[~markers_to_fix] = False
-            bad_frames[next_frame_id,errors] = True
-        if np.any(bad_frames[next_frame_id,:]):
-            pred = model.predict(X_start)
-#             pred = pred[:,np.newaxis,:]
+        # At each step, generate a prediction, replace the predictions of markers
+        # you do not want to predict with the ground truth, and append the
+        # resulting vector to the end of the next input chunk.
+        for i in range(startpoint,X.shape[1]-input_length-startpoint):
+            if np.mod(i,10000) == 0:
+                print('Predicting frame: ',i)
+            next_frame_id = (startpoint+input_length)+i
 
-        # Detect anomalous predictions.
-        outliers = np.squeeze(np.abs(pred) > outlier_thresh)
-        pred[:,0,outliers] = X[:,next_frame_id,outliers]
+            # If there is a marker prediction that is greater than the difference
+            # threshold above, mark it as a bad frame.
+            # These are likely just jumps or identity swaps from MoCap that were
+            # not picked up by preprocessing.
+            if fix_errors:
+                errors = np.squeeze(np.abs((pred[:,0,:] - X[:,next_frame_id,:])) > error_diff_thresh)
+                errors[~markers_to_fix] = False
+                bad_frames[next_frame_id,errors] = True
+            if np.any(bad_frames[next_frame_id,:]):
+                pred,member_pred = model.predict(X_start)
 
-        # Only use the predictions for the bad markers. Take the predictions
-        # and append to the end of X_start for future prediction.
-        pred[:,0,~bad_frames[next_frame_id,:]] = X[:,next_frame_id,~bad_frames[next_frame_id,:]]
-        preds[:,next_frame_id,:] = np.squeeze(pred)
-        X_start = np.concatenate((X_start[:,1:,:], pred),axis = 1)
-    return np.squeeze(preds), bad_frames
+            # Detect anomalous predictions.
+            outliers = np.squeeze(np.abs(pred) > outlier_thresh)
+            pred[:,0,outliers] = X[:,next_frame_id,outliers]
+
+            # Only use the predictions for the bad markers. Take the predictions
+            # and append to the end of X_start for future prediction.
+            pred[:,0,~bad_frames[next_frame_id,:]] = X[:,next_frame_id,~bad_frames[next_frame_id,:]]
+            member_pred[:,0,~bad_frames[next_frame_id,:]] = 0;
+            preds[:,next_frame_id,:] = np.squeeze(pred)
+            member_preds[:,next_frame_id,:] = np.squeeze(member_pred)
+            X_start = np.concatenate((X_start[:,1:,:], pred),axis = 1)
+        return np.squeeze(preds), bad_frames, member_preds
+    else:
+        # At each step, generate a prediction, replace the predictions of markers
+        # you do not want to predict with the ground truth, and append the
+        # resulting vector to the end of the next input chunk.
+        for i in range(startpoint,X.shape[1]-input_length-startpoint):
+            if np.mod(i,10000) == 0:
+                print('Predicting frame: ',i)
+            next_frame_id = (startpoint+input_length)+i
+
+            # If there is a marker prediction that is greater than the difference
+            # threshold above, mark it as a bad frame.
+            # These are likely just jumps or identity swaps from MoCap that were
+            # not picked up by preprocessing.
+            if fix_errors:
+                errors = np.squeeze(np.abs((pred[:,0,:] - X[:,next_frame_id,:])) > error_diff_thresh)
+                errors[~markers_to_fix] = False
+                bad_frames[next_frame_id,errors] = True
+            if np.any(bad_frames[next_frame_id,:]):
+                pred = model.predict(X_start)
+
+            # Detect anomalous predictions.
+            outliers = np.squeeze(np.abs(pred) > outlier_thresh)
+            pred[:,0,outliers] = X[:,next_frame_id,outliers]
+
+            # Only use the predictions for the bad markers. Take the predictions
+            # and append to the end of X_start for future prediction.
+            pred[:,0,~bad_frames[next_frame_id,:]] = X[:,next_frame_id,~bad_frames[next_frame_id,:]]
+            preds[:,next_frame_id,:] = np.squeeze(pred)
+            X_start = np.concatenate((X_start[:,1:,:], pred),axis = 1)
+        return np.squeeze(preds), bad_frames
 
 def impute_markers(model_path, data_path, *,
     save_path = None,
@@ -178,6 +216,15 @@ def impute_markers(model_path, data_path, *,
         print('Loading model')
         model = load_model(model_path)
 
+    # Check how many outputs the model has, and how many members if returning member data.
+    n_outputs = len(model.output_shape)
+    if n_outputs == 2:
+        return_member_data = True
+    else:
+        return_member_data = False
+        member_predsF = [None]
+        member_predsR = [None]
+
     # Set Markers to fix
     if markers_to_fix is None:
         markers_to_fix = np.zeros((markers.shape[1])) > 1
@@ -185,12 +232,21 @@ def impute_markers(model_path, data_path, *,
         markers_to_fix[30:36] = True
         markers_to_fix[42:] = True
 
-    # Forward Pass
-    print('Imputing markers: forward pass')
-    predsF,bad_framesF = predict_markers(model,markers,bad_frames, markers_to_fix = markers_to_fix, error_diff_thresh = error_diff_thresh)
-    # Reverse Predict
-    print('Imputing markers: reverse pass')
-    predsR,bad_framesR = predict_markers(model,markers[::-1,:],bad_frames[::-1,:], markers_to_fix = markers_to_fix, error_diff_thresh = error_diff_thresh)
+    # If the model can return the member predictions, do so.
+    if return_member_data:
+        # Forward predict
+        print('Imputing markers: forward pass')
+        predsF,bad_framesF,member_predsF = predict_markers(model,markers,bad_frames, markers_to_fix = markers_to_fix, error_diff_thresh = error_diff_thresh, return_member_data = return_member_data)
+        # Reverse Predict
+        print('Imputing markers: reverse pass')
+        predsR,bad_framesR,member_predsR = predict_markers(model,markers[::-1,:],bad_frames[::-1,:], markers_to_fix = markers_to_fix, error_diff_thresh = error_diff_thresh, return_member_data = return_member_data)
+    else:
+        # Forward predict
+        print('Imputing markers: forward pass')
+        predsF,bad_framesF = predict_markers(model,markers,bad_frames, markers_to_fix = markers_to_fix, error_diff_thresh = error_diff_thresh, return_member_data = return_member_data)
+        # Reverse Predict
+        print('Imputing markers: reverse pass')
+        predsR,bad_framesR = predict_markers(model,markers[::-1,:],bad_frames[::-1,:], markers_to_fix = markers_to_fix, error_diff_thresh = error_diff_thresh, return_member_data = return_member_data)
 
     # Convert to real world coordinates
     markers_world = np.zeros((markers.shape))
@@ -231,7 +287,7 @@ def impute_markers(model_path, data_path, *,
     if save_path is not None:
         s = 'Saving to %s' % (save_path)
         print(s)
-        savemat(save_path,{'preds':preds_world,'markers':markers_world,'badFrames':bad_frames})
+        savemat(save_path,{'preds':preds_world,'markers':markers_world,'badFrames':bad_frames,'member_predsF':member_predsF,'member_predsR':member_predsR})
 
     return preds_world
 

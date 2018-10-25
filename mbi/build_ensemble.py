@@ -20,38 +20,16 @@ from keras import backend as K
 from keras.models import Model, load_model, save_model
 from keras.layers import Input, Conv1D, Dense, Dropout, Lambda, Permute, LSTM, Average, concatenate, Layer, multiply
 from keras.optimizers import Adam
-
 from utils import create_run_folders
 
 ## Make an ensemble
-def ensemble(models, model_input):
+def ensemble(models, model_input, return_member_data):
     """
     Build an ensemble of models that output the median of all members. Does not compile the ensemble.
     :param models: List of keras models to include in the ensemble. Currently requires the same output shape.
     :param model_input: Input shape of the members. Used for building the ensemble.
-    """
-    def ens_median(x):
-        import tensorflow as tf # This is needed to load the model in the future.
-        return tf.contrib.distributions.percentile(x,50,axis=1)
-    def pad(x):
-        return(x[:,None,:])
-
-    # Get outputs from the ensemble models, compute the median, and fix the shape.
-    outputs = [model(model_input) for model in models]
-    y = concatenate(outputs,axis = 1)
-    y = Lambda(ens_median)(y)
-    y = Lambda(pad)(y)
-
-    # Return model. No compilation is necessary since there are no additional trainable parameters.
-    model = Model(model_input, y, name='ensemble')
-    return model
-
-## Make an ensemble that also outputs the member predictions
-def ensemble_multi_output(models, model_input):
-    """
-    Build an ensemble of models that outputs the median of all members and the predictions of all of its members. Does not compile the ensemble.
-    :param models: List of keras models to include in the ensemble. Currently requires the same output shape.
-    :param model_input: Input shape of the members. Used for building the ensemble.
+    :param return_member_data: If True, model will have two outputs: the ensemble prediction and all member predictions.
+                               Otherwise, the model will output only the ensemble predictions.
     """
     def ens_median(x):
         import tensorflow as tf # This is needed to load the model in the future.
@@ -66,7 +44,10 @@ def ensemble_multi_output(models, model_input):
     ensemble_prediction = Lambda(pad)(ensemble_prediction)
 
     # Return model. No compilation is necessary since there are no additional trainable parameters.
-    model = Model(model_input, outputs=[ensemble_prediction,member_predictions], name='ensemble')
+    if return_member_data:
+        model = Model(model_input, outputs=[ensemble_prediction,member_predictions], name='ensemble')
+    else:
+        model = Model(model_input, ensemble_prediction, name='ensemble')
     return model
 
 def build_ensemble(base_output_path,
@@ -86,15 +67,12 @@ def build_ensemble(base_output_path,
     # Load all of the models to be used as members of the ensemble
     models = [None]*len(models_in_ensemble)
     for i in range(len(models_in_ensemble)):
-        models[i] = load_model(base_output_path + '/' + models_in_ensemble[i])
+        models[i] = load_model(os.path.join(base_output_path, models_in_ensemble[i]))
         models[i].name = 'model_%d' % (i)
 
     # Build the ensemble
     ensemble_input = Input(batch_shape=models[0].input_shape)
-    if return_member_data:
-        model_ensemble = ensemble_multi_output(models,ensemble_input)
-    else:
-        model_ensemble = ensemble(models,ensemble_input)
+    model_ensemble = ensemble(models,ensemble_input,return_member_data)
 
     # Build ensemble folder name if needed
     if run_name == None:
@@ -113,8 +91,8 @@ def build_ensemble(base_output_path,
     # Save the training information in a mat file.
     print('Saving training info')
     savemat(os.path.join(run_path, "training_info.mat"),
-            {"base_output_path": base_output_path, "run_name": run_name,
-             "clean": clean,"model_paths":model_paths})
+            {"base_output_path": base_output_path, "run_name": run_name, "return_member_data": return_member_data,
+             "clean": clean,"model_paths":model_paths,"n_members":len(models_in_ensemble)})
 
     print('Saving model ensemble')
     model_ensemble.save(os.path.join(run_path, "final_model.h5"))

@@ -16,9 +16,9 @@ FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/impute
 MODELPATH=(\
 "/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models/model_ensemble_02/final_model.h5")
 DATAPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_badFrames_arms_test.h5")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_mbi_v_ibi.h5")
 SAVEPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/predictions/wave_net_ensemble_stride_5_JDM25_badFrames_arms_test.mat")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/predictions/wave_net_ensemble_stride_5_JDM25_mbi_v_ibi.mat")
 STRIDE=5
 
 # Run imputation with parameters specified above.
