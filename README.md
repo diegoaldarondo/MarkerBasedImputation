@@ -52,7 +52,7 @@ To install, simply execute the included setup file in the environment of your ch
 
 ```
 pip install setuptools
-python setup.py
+python setup.py install
 ```
 
 [Back to top](#Top)
