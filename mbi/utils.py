@@ -34,9 +34,6 @@ def load_dataset(data_path):
     bad_frames - Logical or integer matrix denoting frames in which there were marker errors. Same size as markers.
                  0 when marker j is a good recording at frame i, 1 otherwise.
     """
-    # data_path = '/n/holylfs02/LABS/olveczky_lab/Diego/data/TCNData/JDM32_20180924T170909.h5'
-    # data_path = '/n/holylfs02/LABS/olveczky_lab/Diego/data/TCNData/Traces_20180918T154235.h5'
-    # data_path = '/n/holylfs02/LABS/olveczky_lab/Diego/data/TCNData/TCN_20180905T134346.h5'
     f = h5py.File(data_path, 'r')
     markers = np.array(f['markers'][:]).T
     marker_means = np.array(f['marker_means'][:]).T

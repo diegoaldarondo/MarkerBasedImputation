@@ -42,7 +42,7 @@ def plot_history(history, save_path):
     plt.savefig(save_path, bbox_inches='tight')
     plt.close(p)
 
-def multiple_predict_with_replacement(model, X, markers_to_predict, num_frames = True, outlier_thresh = 3):
+def multiple_predict_with_replacement(model, X, markers_to_predict, num_frames = True, outlier_thresh = 3, return_member_data = False):
     """
     Predicts the position of particular markers an arbitrary number of frames into the future
     :param model: model to use for prediction
@@ -68,21 +68,41 @@ def multiple_predict_with_replacement(model, X, markers_to_predict, num_frames =
     count = 0;
     preds = np.zeros((X.shape[0],num_frames,X.shape[2]))
 
-    # At each step, generate a prediction, replace the predictions of markers you do not want to predict
-    # with the ground truth, and append the resulting vector to the end of the next input chunk.
-    for i in range(num_frames):
-        pred = model.predict(X_start)
-        pred[:,0,~markers_to_predict] = X[:,input_length+count,~markers_to_predict]
+    if return_member_data:
+        n_members = model.output_shape[1][1]
+        member_preds = np.zeros((X.shape[0],n_members,num_frames,X.shape[2]))
+        # At each step, generate a prediction, replace the predictions of markers you do not want to predict
+        # with the ground truth, and append the resulting vector to the end of the next input chunk.
+        for i in range(num_frames):
+            pred, member_pred = model.predict(X_start)
+            pred[:,0,~markers_to_predict] = X[:,input_length+count,~markers_to_predict]
 
-        # Detect anomalous predictions.
-        # outliers = np.squeeze(np.abs(pred) > outlier_thresh)
-        # for i in range(outliers.shape[0]):
-        #     pred[i,0,outliers[i,:]] = X[i,input_length+count,outliers[i,:]]
+            # Detect anomalous predictions.
+            # outliers = np.squeeze(np.abs(pred) > outlier_thresh)
+            # for i in range(outliers.shape[0]):
+            #     pred[i,0,outliers[i,:]] = X[i,input_length+count,outliers[i,:]]
 
-        preds[:,i,:] = np.squeeze(pred)
-        X_start = np.concatenate((X_start[:,1:,:], pred),axis = 1)
-        count += 1
-    return preds
+            preds[:,i,:] = np.squeeze(pred)
+            member_preds[:,:,i,:] = member_pred
+            X_start = np.concatenate((X_start[:,1:,:], pred),axis = 1)
+            count += 1
+        return preds, member_preds
+    else:
+        # At each step, generate a prediction, replace the predictions of markers you do not want to predict
+        # with the ground truth, and append the resulting vector to the end of the next input chunk.
+        for i in range(num_frames):
+            pred = model.predict(X_start)
+            pred[:,0,~markers_to_predict] = X[:,input_length+count,~markers_to_predict]
+
+            # Detect anomalous predictions.
+            # outliers = np.squeeze(np.abs(pred) > outlier_thresh)
+            # for i in range(outliers.shape[0]):
+            #     pred[i,0,outliers[i,:]] = X[i,input_length+count,outliers[i,:]]
+
+            preds[:,i,:] = np.squeeze(pred)
+            X_start = np.concatenate((X_start[:,1:,:], pred),axis = 1)
+            count += 1
+        return preds
 
 def sigmoid(x,x_0,k):
     return 1 / (1 + np.exp(-k*(x-x_0)))
@@ -124,8 +144,8 @@ def plot_error_distribution_over_time(delta, delta_marker, marker_id, viz_direct
     plt.xlabel('Number of frames',fontsize=18)
     title = 'Marker %d 3d' % (marker_id)
     plt.title(title)
-    s = '/multi_predict_error_distribution_vs_time_marker3d%d.png' % (marker_id)
-    plt.savefig(viz_directory + s, bbox_inches='tight')
+    s = 'multi_predict_error_distribution_vs_time_marker3d%d.png' % (marker_id)
+    plt.savefig(os.path.join(viz_directory, s), bbox_inches='tight')
     plt.close(f)
 
 def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_stds, viz_directory, plot_distribution = False):
@@ -140,6 +160,16 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_std
     """
     n_markers = total.shape[2]
     delta_markers = np.zeros((Y.shape[0],Y.shape[1],np.int32(n_markers/3)))
+
+    # Check how many outputs the model has, and how many members if returning member data.
+    n_outputs = len(model.output_shape)
+    if n_outputs == 2:
+        return_member_data = True
+    else:
+        return_member_data = False
+        member_predsF = [None]
+        member_predsR = [None]
+
     # For each marker, predict position over all gaps and make plots.
     for marker_id in range(np.int32(n_markers/3)):
         # Pick the markers you would like to predict
@@ -148,13 +178,18 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_std
         markers_to_predict[predict_ids] = True;
 
         # Predict markers
-        s = 'Predicting marker %d' % (marker_id)
-        print(s)
+        print('Predicting marker ', (marker_id))
         start = datetime.datetime.now()
-        # Multi predict forward
-        preds = multiple_predict_with_replacement(model, total, markers_to_predict)
-        # Multi predict reverse
-        predsR = multiple_predict_with_replacement(model, totalR, markers_to_predict)
+        if return_member_data:
+            # Multi predict forward
+            preds, member_predsF = multiple_predict_with_replacement(model, total, markers_to_predict, return_member_data = return_member_data)
+            # Multi predict reverse
+            predsR, member_predsR = multiple_predict_with_replacement(model, totalR, markers_to_predict, return_member_data = return_member_data)
+        else:
+            # Multi predict forward
+            preds = multiple_predict_with_replacement(model, total, markers_to_predict, return_member_data = return_member_data)
+            # Multi predict reverse
+            predsR = multiple_predict_with_replacement(model, totalR, markers_to_predict, return_member_data = return_member_data)
         elapsed = datetime.datetime.now() - start
         s = 'Finished predictions of marker %d in %f seconds' % (marker_id, elapsed.total_seconds())
         print(s)
@@ -189,12 +224,12 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_std
 
         delta_markers[:,:,marker_id] = delta_marker
 
-    return delta_markers
+    return delta_markers, member_predsF, member_predsR
 
 def analyze_performance(model_base_path, data_path, *,
                         run_name = None,
                         viz_directory = None,
-                        model_name = '/best_model.h5',
+                        model_name = 'best_model.h5',
                         default_input_length = 9,
                         testing_set_only = False,
                         analyze_history = True,
@@ -229,21 +264,21 @@ def analyze_performance(model_base_path, data_path, *,
         run_name = str(datetime.datetime.now())
 
     if viz_directory is None:
-        viz_directory = model_base_path + '/viz' + '/' + run_name
+        viz_directory = os.path.join(os.path.join(model_base_path,'viz'), run_name)
     if not os.path.exists(viz_directory):
         os.makedirs(viz_directory)
 
     # Look for model data in the training_info, if possible.
     try:
-        model_info = loadmat(model_base_path + '/training_info.mat')
+        model_info = loadmat(os.path.join(model_base_path , 'training_info.mat'))
         input_length = model_info['input_length'][:]
     except KeyError:
         input_length = default_input_length
 
     if analyze_history:
         print('Plotting history')
-        history = loadmat(model_base_path + '/history.mat')
-        plot_history(history, model_base_path + '/history.png')
+        history = loadmat(os.path.join(model_base_path, 'history.mat'))
+        plot_history(history, os.path.join(model_base_path , 'history.png'))
 
     # Load the model
     print('Loading model')
@@ -256,6 +291,9 @@ def analyze_performance(model_base_path, data_path, *,
 
     lengths = np.arange(min_gap_length,max_gap_length+1,10)
     delta_markers = np.zeros((lengths.shape[0],),dtype=np.object)
+    member_predsF = np.zeros((lengths.shape[0],),dtype=np.object)
+    member_predsR = np.zeros((lengths.shape[0],),dtype=np.object)
+
     for i in range(lengths.shape[0]):
         # Get Ids
         print('Getting indices')
@@ -272,15 +310,15 @@ def analyze_performance(model_base_path, data_path, *,
         total = np.concatenate((X,Y), axis = 1)
         totalR = np.concatenate((XR,YR),axis = 1)
 
-        run_folder = '/length_%d' % (lengths[i])
-        save_directory = viz_directory + run_folder
+        run_folder = 'length_%d' % (lengths[i])
+        save_directory = os.path.join(viz_directory, run_folder)
         if not os.path.exists(save_directory):
             os.makedirs(save_directory)
         # Analyze marker predictions over time
-        delta_markers[i] = analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_stds, save_directory, plot_distribution = plot_distribution)
+        delta_markers[i], member_predsF[i], member_predsR[i] = analyze_marker_predictions(model, total, totalR, Y, marker_means, marker_stds, save_directory, plot_distribution = plot_distribution)
 
     print('Saving predictions')
-    savemat(viz_directory + '/errors.mat',{'delta_markers':delta_markers})
+    savemat(os.path.join(viz_directory + 'errors.mat'),{'delta_markers':delta_markers,'member_predsF':member_predsF,'member_predsR':member_predsR})
 
 if __name__ == "__main__":
     # Wrapper for running from commandline
