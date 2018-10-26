@@ -1,28 +1,17 @@
-import numpy as np
-import h5py
-import os
-from time import time
-from scipy.io import loadmat, savemat
-import re
-import shutil
-import inspect
-import datetime
-from subprocess import check_call
+"""Define mbi models."""
 import keras
-import keras.losses
-from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, LambdaCallback
-from keras import backend as K
-from keras.models import Model, load_model
+from keras.models import Model
 from keras import layers
-from keras.layers import Input, Conv1D, Dense, Dropout, Lambda, Permute, LSTM
+from keras.layers import Input, Conv1D, Dense, Lambda, Permute, LSTM
 from keras.optimizers import Adam
 from keras.regularizers import l2
-from keras.utils import multi_gpu_model
-from utils import load_dataset, get_ids, CausalAtrousConvolution1D, asymmetric_temporal_padding, categorical_mean_squared_error
 
-def wave_net(lossfunc,lr,input_length,output_length,n_markers,n_filters,filter_width,layers_per_level,n_dilations,print_summary = False):
-    """
-    Base WaveNet model
+
+def wave_net(lossfunc, lr, input_length, output_length, n_markers, n_filters,
+             filter_width, layers_per_level, n_dilations,
+             print_summary = False):
+    """Base WaveNet model.
+
     :param lossfunc: Loss function
     :param lr: Loss rate
     :param input_length: Model input length (frames)
@@ -34,9 +23,8 @@ def wave_net(lossfunc,lr,input_length,output_length,n_markers,n_filters,filter_w
     :param n_dilations: Number of dilation levels
     :param print_summary: Print the model specification.
     """
-
     # Specify the Input
-    history_seq = Input(shape=(input_length,n_markers))
+    history_seq = Input(shape=(input_length, n_markers))
     x = history_seq
 
     # Dilated causal convolutions
@@ -50,9 +38,9 @@ def wave_net(lossfunc,lr,input_length,output_length,n_markers,n_filters,filter_w
 
     # Dense connections
     x = Dense(60)(x)
-    x = Permute([2,1])(x)
+    x = Permute([2, 1])(x)
     x = Dense(output_length)(x)
-    x = Permute([2,1])(x)
+    x = Permute([2, 1])(x)
 
     # Build and compile the model
     model = Model(history_seq, x)
@@ -62,10 +50,13 @@ def wave_net(lossfunc,lr,input_length,output_length,n_markers,n_filters,filter_w
 
     return model
 
-def wave_net_res_skip(lossfunc, lr, input_length, n_filters, n_markers, n_dilations, layers_per_level, filter_width, use_skip_connections=False,
-                learn_all_outputs = False, use_bias = True, res_l2 = .01, print_summary=False):
-    """
-    Wave_net model with residual and optional skip connections
+
+def wave_net_res_skip(lossfunc, lr, input_length, n_filters, n_markers,
+                      n_dilations, layers_per_level, filter_width,
+                      use_skip_connections=False, learn_all_outputs=False,
+                      use_bias=True, res_l2=.01, print_summary=False):
+    """Wave_net model with residual and optional skip skip_connections.
+
     :param lossfunc: Loss function
     :param lr: Loss rate
     :param input_length: Model input length (frames)
@@ -79,22 +70,26 @@ def wave_net_res_skip(lossfunc, lr, input_length, n_filters, n_markers, n_dilati
     :param res_l2: Residual skip connection regularizer
     :param print_summary: Print the model specification.
     """
-    # TODO: include output_length specification.
+    # TODO(Output): include output_length specification.
     def residual_block(x):
         original_x = x
         x = Conv1D(filters=n_filters,
                    kernel_size=filter_width,
-                   padding='causal', name='dilated_conv_%d_s%d_01' % (2 ** i, s),
+                   padding='causal',
+                   name='dilated_conv_%d_s%d_01' % (2 ** i, s),
                    dilation_rate=2**i)(x)
         res_x = Conv1D(filters=n_filters,
-                   kernel_size=filter_width,
-                   padding='causal', name='dilated_conv_%d_s%d_02' % (2 ** i, s),
-                   dilation_rate=2**i)(x)
+                       kernel_size=filter_width,
+                       padding='causal',
+                       name='dilated_conv_%d_s%d_02' % (2 ** i, s),
+                       dilation_rate=2**i)(x)
         res_x = Conv1D(filters=n_filters,
-                   kernel_size=filter_width,
-                   padding='causal', name='dilated_conv_%d_s%d_03' % (2 ** i, s),
-                   dilation_rate=2**i)(res_x)
-        skip_x = Conv1D(n_filters, 1, padding='same', use_bias=use_bias, kernel_regularizer=l2(res_l2))(x)
+                       kernel_size=filter_width,
+                       padding='causal',
+                       name='dilated_conv_%d_s%d_03' % (2 ** i, s),
+                       dilation_rate=2**i)(res_x)
+        skip_x = Conv1D(n_filters, 1, padding='same', use_bias=use_bias,
+                        kernel_regularizer=l2(res_l2))(x)
         res_x = layers.Add()([original_x, res_x])
         return res_x, skip_x
 
@@ -102,11 +97,8 @@ def wave_net_res_skip(lossfunc, lr, input_length, n_filters, n_markers, n_dilati
     input = Input(shape=(input_length, n_markers), name='input_part')
     out = input
     skip_connections = []
-    out = Conv1D(n_filters, filter_width,
-                            dilation_rate=1,
-                            padding='causal',
-                            name='initial_causal_conv'
-                            )(out)
+    out = Conv1D(n_filters, filter_width, dilation_rate=1, padding='causal',
+                 name='initial_causal_conv')(out)
 
     # Construct the residual blocks
     for i in range(0, n_dilations + 1):
@@ -120,10 +112,10 @@ def wave_net_res_skip(lossfunc, lr, input_length, n_filters, n_markers, n_dilati
 
     # Dense connections
     out = Dense(n_markers)(out)
-    out = Permute([2,1])(out)
+    out = Permute([2, 1])(out)
     out = Dense(1)(out)
-    out = Permute([2,1])(out)
-    
+    out = Permute([2, 1])(out)
+
     # Build and compile the model
     model = Model(input, out)
     model.compile(optimizer=Adam(lr=lr), loss=lossfunc, metrics=['mse'])
@@ -132,9 +124,10 @@ def wave_net_res_skip(lossfunc, lr, input_length, n_filters, n_markers, n_dilati
     return model
 
 
-def lstm_model(lossfunc,lr,input_length,n_markers,latent_dim,print_summary = False):
-    """
-    Lstm base model
+def lstm_model(lossfunc, lr, input_length, n_markers, latent_dim,
+               print_summary=False):
+    """Lstm base model.
+
     :param lossfunc: Loss function
     :param lr: Loss rate
     :param input_length: Model input length (frames)
@@ -142,15 +135,16 @@ def lstm_model(lossfunc,lr,input_length,n_markers,latent_dim,print_summary = Fal
     :param latent_dim: Number of latent dimensions in LSTM layers
     :param print_summary: Print the model specification.
     """
-    inputs1 = Input(shape = (input_length, n_markers))
-    encoded1 = LSTM(latent_dim,return_sequences=True)(inputs1)
-    encoded1 = LSTM(latent_dim,return_sequences=True)(encoded1)
-    encoded1 = LSTM(latent_dim,return_sequences=False)(encoded1)
+    inputs1 = Input(shape=(input_length, n_markers))
+    encoded1 = LSTM(latent_dim, return_sequences=True)(inputs1)
+    encoded1 = LSTM(latent_dim, return_sequences=True)(encoded1)
+    encoded1 = LSTM(latent_dim, return_sequences=False)(encoded1)
     encoded = Dense(n_markers)(encoded1)
 
-    # Include this to be consistent with [nSample,nFrame,nMarker] output format
+    # Include this to be consistent with [nSample, nFrame, nMarker]
+    # output format
     def pad(x):
-        return(x[:,None,:])
+        return(x[:, None, :])
     encoded = Lambda(pad)(encoded)
 
     # Build and compile model
@@ -162,9 +156,11 @@ def lstm_model(lossfunc,lr,input_length,n_markers,latent_dim,print_summary = Fal
 
     return model
 
-def conv_lstm(lossfunc,lr,input_length,output_length,n_markers,n_filters,filter_width,layers_per_level,n_dilations,latent_dim,print_summary = False):
-    """
-    Convolutional LSTM model. Not thoroughly tested. Not implemented in training.py.
+
+def conv_lstm(lossfunc, lr, input_length, output_length, n_markers,
+              n_filters, filter_width, layers_per_level, n_dilations,
+              latent_dim, print_summary=False):
+    """ Convolutional LSTM model. Not thoroughly tested. Not implemented in training.py.
     :param lossfunc: Loss function
     :param lr: Loss rate
     :param input_length: Model input length (frames)
@@ -179,7 +175,7 @@ def conv_lstm(lossfunc,lr,input_length,output_length,n_markers,n_filters,filter_
     """
 
     # Specify the Input
-    history_seq = Input(shape=(input_length,n_markers))
+    history_seq = Input(shape=(input_length, n_markers))
     x = history_seq
 
     # Dilated causal convolutions
@@ -191,13 +187,13 @@ def conv_lstm(lossfunc,lr,input_length,output_length,n_markers,n_filters,filter_
                        padding='causal',
                        dilation_rate=dilation_rate)(x)
 
-    encoded1 = LSTM(latent_dim,return_sequences=False)(x)
+    encoded1 = LSTM(latent_dim, return_sequences=False)(x)
 
     # Dense connections
     x = Dense(60)(x)
-    x = Permute([2,1])(x)
+    x = Permute([2, 1])(x)
     x = Dense(output_length)(x)
-    x = Permute([2,1])(x)
+    x = Permute([2, 1])(x)
 
     model = Model(history_seq, x)
     model.compile(optimizer=Adam(lr=lr), loss=lossfunc, metrics=['mse'])
