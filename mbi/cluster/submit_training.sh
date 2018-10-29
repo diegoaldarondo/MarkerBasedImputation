@@ -16,8 +16,26 @@ srun -l -n1 echo $CUDA_VISIBLE_DEVICES
 # Specify paths and variables for training. Be sure all arrays have the same length.
 FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/training.py"
 DATAPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_20181002T180653.h5")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5")
 BASEOUTPUTPATH=(\
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models" \
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models" \
 "/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models")
 
 # Run training with parameters specified above.

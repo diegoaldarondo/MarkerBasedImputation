@@ -37,14 +37,14 @@ for i = 1:numel(mocapPaths)
             bad_frames{i}(mocap_data{i}.bad_frames_agg{j},j) = true;
         end
     catch
-        markers{i} = struct2array(mocap_data(i).markers_aligned_preproc);
-        bad_frames{i} = false(size(markers{i},1), size(markers{i},2)./3);
+    markers{i} = struct2array(mocap_data{i}.markers_aligned_preproc);
+    bad_frames{i} = false(size(markers{i},1), size(markers{i},2)./3);
 
-        % Express bad_frames as a logical matrix rather than integer indexing.
-        for j = 1:numel(mocap_data(i).bad_frames_agg)
-            bad_frames{i}(mocap_data(i).bad_frames_agg{j},j) = true;
-        end
+    % Express bad_frames as a logical matrix rather than integer indexing.
+    for j = 1:numel(mocap_data{i}.bad_frames_agg)
+        bad_frames{i}(mocap_data{i}.bad_frames_agg{j},j) = true;
     end
+    
 end
 
 % Concatenate all data
@@ -69,7 +69,7 @@ for i = 1:size(markers,2)
 end
 
 %% Normalize the values across time.
-markers = (markers-marker_means)./marker_stds;
+markers = zscore(markers,1);
 
 %% Save the data to an h5 file
 h5save(savePath,markers,'markers')

@@ -282,11 +282,13 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
                  every skip-th example trace to save time.
     """
     if run_name is None:
-        run_name = str(datetime.datetime.now())
+        run_name = datetime.datetime.now().strftime('%y_%m_%d_%H_%M_%S_%f')
+        print('Created run: %s' % (run_name))
 
     if viz_directory is None:
         viz_directory = \
             os.path.join(os.path.join(model_base_path, 'viz'), run_name)
+        print('Created viz directory: %s' % (viz_directory))
     if not os.path.exists(viz_directory):
         os.makedirs(viz_directory)
 
@@ -305,7 +307,7 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
 
     # Load the model
     print('Loading model')
-    model = load_model(model_base_path + model_name)
+    model = load_model(os.path.join(model_base_path, model_name))
 
     print('Loading data')
     markers, marker_means, marker_stds, bad_frames = load_dataset(data_path)
@@ -346,7 +348,7 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
                                        plot_distribution=plot_distribution)
 
     print('Saving predictions')
-    savemat(os.path.join(viz_directory + 'errors.mat'),
+    savemat(os.path.join(viz_directory, 'errors.mat'),
             {'delta_markers': delta_markers, 'member_predsF': member_predsF,
              'member_predsR': member_predsR})
 
