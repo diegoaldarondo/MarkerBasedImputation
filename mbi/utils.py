@@ -142,7 +142,7 @@ class CausalAtrousConvolution1D(Conv1D):
                  causal=False, **kwargs):
         super(CausalAtrousConvolution1D, self).__init__(filters,
                                                         kernel_size=kernel_size,
-                                                        strides=strides
+                                                        strides=strides,
                                                         padding=padding,
                                                         dilation_rate=dilation_rate,
                                                         activation=activation,

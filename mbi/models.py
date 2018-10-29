@@ -1,16 +1,16 @@
 """Define mbi models."""
 import keras
-from keras.models import Model
 from keras import layers
 from keras.layers import Input, Conv1D, Dense, Lambda, Permute, LSTM
+from keras.models import Model
 from keras.optimizers import Adam
 from keras.regularizers import l2
 
 
 def wave_net(lossfunc, lr, input_length, output_length, n_markers, n_filters,
              filter_width, layers_per_level, n_dilations,
-             print_summary = False):
-    """Base WaveNet model.
+             print_summary=False):
+    """Build the base WaveNet model.
 
     :param lossfunc: Loss function
     :param lr: Loss rate
@@ -160,7 +160,10 @@ def lstm_model(lossfunc, lr, input_length, n_markers, latent_dim,
 def conv_lstm(lossfunc, lr, input_length, output_length, n_markers,
               n_filters, filter_width, layers_per_level, n_dilations,
               latent_dim, print_summary=False):
-    """ Convolutional LSTM model. Not thoroughly tested. Not implemented in training.py.
+    """Convolutional LSTM model.
+
+    Not thoroughly tested.
+    Not implemented in training.py.
     :param lossfunc: Loss function
     :param lr: Loss rate
     :param input_length: Model input length (frames)
@@ -173,7 +176,6 @@ def conv_lstm(lossfunc, lr, input_length, output_length, n_markers,
     :param latent_dim: Number of latent dimensions in LSTM layers
     :param print_summary: Print the model specification.
     """
-
     # Specify the Input
     history_seq = Input(shape=(input_length, n_markers))
     x = history_seq

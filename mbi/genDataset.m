@@ -1,13 +1,13 @@
 function genDataset(mocapPaths, savePath)
-%genDataset - Generate an h5 dataset for MBI from MoCap structs. 
+%genDataset - Generate an h5 dataset for MBI from MoCap structs.
 %
 % Syntax: genDataset(mocapPaths, savePath)
 %
 % Inputs:
-%    mocapPaths - Cell array of paths to mat files with mocap structs. 
-%    savePath   - Output path for h5 file. 
+%    mocapPaths - Cell array of paths to mat files with mocap structs.
+%    savePath   - Output path for h5 file.
 %
-% Example: 
+% Example:
 %    mocapPaths = {'myMocapStruct1.mat','myMocapStruct2.mat'};
 %    savePath = 'myDataset.h5';
 %    genDataset(mocapPaths,savePath)
@@ -30,7 +30,7 @@ mocap_data = cellfun(@(X) load(X), mocapPaths,'uni',0);
 for i = 1:numel(mocapPaths)
     markers{i} = struct2array(mocap_data{i}.markers_aligned_preproc);
     bad_frames{i} = false(size(markers{i},1), size(markers{i},2)./3);
-    
+
     % Express bad_frames as a logical matrix rather than integer indexing.
     for j = 1:numel(mocap_data{i}.bad_frames_agg)
         bad_frames{i}(mocap_data{i}.bad_frames_agg{j},j) = true;
@@ -51,14 +51,14 @@ new_bad_frames(:,larm) = repmat(any(bad_frames(:,larm),2),1,2);
 new_bad_frames(:,rarm) = repmat(any(bad_frames(:,rarm),2),1,2);
 bad_frames = new_bad_frames;
 
-%% Put in some values for the nans 
-% (Otherwise the model will fail if nans aren't accounted for in 
-%  badFrames, which happens in some datasets) 
+%% Put in some values for the nans
+% (Otherwise the model will fail if nans aren't accounted for in
+%  badFrames, which happens in some datasets)
 for i = 1:size(markers,2)
     markers(isnan(markers(:,i)),i) = marker_means(i);
 end
 
-%% Normalize the values across time. 
+%% Normalize the values across time.
 markers = zscore(markers,1);
 
 %% Save the data to an h5 file

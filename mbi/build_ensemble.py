@@ -23,7 +23,7 @@ def ensemble(models, model_input, return_member_data):
                                ensemble predictions.
     """
     def ens_median(x):
-        import tensorflow as tf # This is needed to load the model.
+        import tensorflow as tf  # This is needed to load the model.
         return tf.contrib.distributions.percentile(x, 50, axis=1)
 
     def pad(x):

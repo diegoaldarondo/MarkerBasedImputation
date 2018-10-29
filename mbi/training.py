@@ -32,7 +32,7 @@ class LossHistory(keras.callbacks.Callback):
 
 
 def create_model(net_name, **kwargs):
-    """Wrapper for initializing a network for training."""
+    """Initialize a network for training."""
     compile_model = dict(
         wave_net=models.wave_net,
         lstm_model=models.lstm_model,
