@@ -4,8 +4,8 @@
 #SBATCH -N 1                # number of nodes
 #SBATCH -n 4                # number of tasks
 #SBATCH --gres=gpu:1        # number of total gpus
-#SBATCH --mem 40000        # memory for all cores
-#SBATCH -t 0-07:00          # time (D-HH:MM)
+#SBATCH --mem 60000        # memory for all cores
+#SBATCH -t 0-24:00          # time (D-HH:MM)
 #SBATCH --export=ALL
 #SBATCH -o Job.%N.%j.out    # STDOUT
 #SBATCH -e Job.%N.%j.err    # STDERR
@@ -14,11 +14,11 @@ FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/impute
 
 # Specify paths and variables for imputation. Be sure all arrays have the same length.
 MODELPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models/model_ensemble_02/final_model.h5")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models/model_ensemble/final_model.h5")
 DATAPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_mbi_v_ibi.h5")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5")
 SAVEPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/predictions/wave_net_ensemble_stride_5_JDM25_mbi_v_ibi.mat")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/predictions/wave_net_ensemble_stride_5_JDM25_fullDay.mat")
 STRIDE=5
 
 # Run imputation with parameters specified above.

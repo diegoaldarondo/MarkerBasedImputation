@@ -69,8 +69,9 @@ for i = 1:size(markers,2)
 end
 
 %% Normalize the values across time.
+% markers = zscore(markers,1)
 markers = (markers-marker_means)./marker_stds;
-
+markers(isnan(markers)) = 0;
 %% Save the data to an h5 file
 h5save(savePath,markers,'markers')
 h5save(savePath,bad_frames,'bad_frames')
