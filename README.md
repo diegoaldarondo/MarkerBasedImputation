@@ -161,6 +161,18 @@ $ nano submit_impute_markers.sh
 $ sbatch submit_impute_markers.sh
 ```
 
+You can also separate the imputation into chunks to speed up prediction time with parallel processing. First modify the included `submit_batch_chunk_imputation.sh` and run the following commands. 
+
+```
+$ sbatch submit_batch_chunk_imputation.sh
+```
+
+and after it finishes:
+
+```
+sbatch submit_merge_chunks.sh
+```
+
 [Back to top](#Top)
 <a name="Postprocessing"></a>
 ### Postprocessing
