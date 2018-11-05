@@ -44,14 +44,7 @@ def predict_markers(model, X, bad_frames, markers_to_fix=None,
     # Get the input lengths and find the first instance of all good frames.
     input_length = model.input.shape.as_list()[1]
     bad_frames = np.repeat(bad_frames, 3, axis=1) > .5
-    num_bad_markers = np.sum(bad_frames, axis=1)
     startpoint = 0
-    for i in range(X.shape[0]):
-
-        if np.any(num_bad_markers[startpoint:(startpoint+input_length)]):
-            startpoint += startpoint
-        else:
-            break
 
     # See whether you should fix errors
     fix_errors = np.any(markers_to_fix)
@@ -62,6 +55,7 @@ def predict_markers(model, X, bad_frames, markers_to_fix=None,
 
     # Preallocate
     preds = np.zeros((X.shape))
+    preds[:, startpoint:(startpoint+input_length), :] = X_start
     pred = np.zeros((1, 1, X.shape[2]))
 
     if return_member_data:
@@ -147,10 +141,13 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
     :param model_path: Path to model to use for prediction.
     :param data_path: Path to marker and bad_frames data. Can be hdf5 or
                       mat -v7.3.
+    :param path_direction: Direction in which to impute markers.
+                           Can be 'forward' or 'reverse'
     :param save_path: Path to a folder in which to store the prediction chunks.
-    :param start_frame: Frame at which to begin imputation.
-    :param n_frames: Number of frames to impute.
     :param stride: stride length between frames for faster imputation.
+    :param n_folds: Number of folds across which to divide data for faster
+                    imputation.
+    :param fold_id: Fold identity for this specific session.
     :param markers_to_fix: Markers for which to override suspicious MoCap
                            measurements
     :param error_diff_thresh: Z-scored difference threshold marking suspicious
@@ -242,7 +239,7 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
         markers_to_fix[42:] = True
 
     if pass_direction == 'reverse':
-        markers = marker[::-1, :]
+        markers = markers[::-1, :]
         bad_frames = bad_frames[::-1, :]
 
     print('Predicting %d frames starting at frame %d.'
@@ -258,21 +255,32 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
                             return_member_data=return_member_data)
     else:
         # Forward predict
-        print('Imputing markers: forward pass')
+        print('Imputing markers: %s pass' % (pass_direction))
         preds, bad_frames = \
             predict_markers(model, markers, bad_frames,
                             markers_to_fix=markers_to_fix,
                             error_diff_thresh=error_diff_thresh,
                             return_member_data=return_member_data)
+                            
+    if pass_direction == 'reverse':
+        preds = preds[::-1, :]
+        bad_frames = bad_frames[::-1, :]
+        member_preds = member_preds[:, ::-1, :]
 
     # Save predictions to a matlab file.
     if save_path is not None:
-        file_name = '%s_start_frame_%d.mat' % (pass_direction, start_frame)
+        file_name = '%s_fold_id_%d.mat' % (pass_direction, fold_id)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
         save_path = os.path.join(save_path, file_name)
         print('Saving to %s' % (save_path))
         savemat(save_path, {'preds': preds, 'markers': markers,
-                            'badFrames': bad_frames,
-                            'member_preds': member_preds})
+                            'bad_frames': bad_frames,
+                            'member_preds': member_preds, 'n_folds': n_folds,
+                            'fold_id': fold_id,
+                            'pass_direction': pass_direction,
+                            'marker_means': marker_means,
+                            'marker_stds': marker_stds})
 
     return preds
 
