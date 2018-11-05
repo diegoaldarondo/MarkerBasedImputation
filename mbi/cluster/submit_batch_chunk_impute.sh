@@ -6,17 +6,17 @@ SAVEPATH="/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/p
 STRIDE=5
 NFOLDS=20
 
-# $PREDFUNC $0 $1 --save-path=$2 --stride=$3 --n-folds=$4 --fold-id=$5 --pass-direction=$6
+# $PREDFUNC $1 $2 $3 --save-path=$4 --stride=$5 --n-folds=$6 --fold-id=$7
 count=0
 while [ "$count" != "$NFOLDS" ]
 do
-   sbatch cluster/submit_chunk_imputation.sh $MODELPATH $DATAPATH $SAVEPATH $STRIDE $NFOLDS $count "forward"
+   sbatch cluster/submit_chunk_imputation.sh $MODELPATH $DATAPATH "forward" $SAVEPATH $STRIDE $NFOLDS $count
    count=$(( $count + 1 ))
 done
 
 count=0
 while [ "$count" != "$NFOLDS" ]
 do
-   sbatch cluster/submit_chunk_imputation.sh $MODELPATH $DATAPATH $SAVEPATH $STRIDE $NFOLDS $count "reverse"
+   sbatch cluster/submit_chunk_imputation.sh $MODELPATH $DATAPATH "reverse" $SAVEPATH $STRIDE $NFOLDS $count
    count=$(( $count + 1 ))
 done

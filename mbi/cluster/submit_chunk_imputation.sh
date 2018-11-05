@@ -9,7 +9,9 @@
 #SBATCH --export=ALL
 #SBATCH -o Job.%N.%j.out    # STDOUT
 #SBATCH -e Job.%N.%j.err    # STDERR
+srun -l -n1 hostname
+srun -l -n1 echo $CUDA_VISIBLE_DEVICES
 
 PREDFUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/predict_single_pass.py"
-srun -l --gres=gpu:1 -n1 --mem=30000 cluster/py.sh $PREDFUNC $1 $2 --save-path=$3 --stride=$4 --n-folds=$5 --fold-id=$6 --pass-direction=$7 &
+srun -l --gres=gpu:1 -n1 --mem=30000 cluster/py.sh $PREDFUNC $1 $2 $3 --save-path=$4 --stride=$5 --n-folds=$6 --fold-id=$7 &
 wait

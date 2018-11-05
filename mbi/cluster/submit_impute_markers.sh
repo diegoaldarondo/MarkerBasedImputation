@@ -10,6 +10,9 @@
 #SBATCH -o Job.%N.%j.out    # STDOUT
 #SBATCH -e Job.%N.%j.err    # STDERR
 
+srun -l -n1 hostname
+srun -l -n1 echo $CUDA_VISIBLE_DEVICES
+
 FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/impute_markers.py"
 
 # Specify paths and variables for imputation. Be sure all arrays have the same length.

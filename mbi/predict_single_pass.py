@@ -6,7 +6,6 @@ import numpy as np
 import os
 from scipy.io import savemat
 from scipy import stats
-from skimage import measure
 
 
 def sigmoid(x, x_0, k):
@@ -68,7 +67,7 @@ def predict_markers(model, X, bad_frames, markers_to_fix=None,
         # the resulting vector to the end of the next input chunk.
         for i in range(startpoint, X.shape[1]-input_length-startpoint):
             if np.mod(i, 10000) == 0:
-                print('Predicting frame: ', i)
+                print('Predicting frame: ', i, flush=True)
             next_frame_id = (startpoint+input_length)+i
 
             # If there is a marker prediction that is greater than the
@@ -103,7 +102,7 @@ def predict_markers(model, X, bad_frames, markers_to_fix=None,
         # the resulting vector to the end of the next input chunk.
         for i in range(startpoint, X.shape[1]-input_length-startpoint):
             if np.mod(i, 10000) == 0:
-                print('Predicting frame: ', i)
+                print('Predicting frame: ', i, flush=True)
             next_frame_id = (startpoint+input_length)+i
 
             # If there is a marker prediction that is greater than the
@@ -141,7 +140,7 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
     :param model_path: Path to model to use for prediction.
     :param data_path: Path to marker and bad_frames data. Can be hdf5 or
                       mat -v7.3.
-    :param path_direction: Direction in which to impute markers.
+    :param pass_direction: Direction in which to impute markers.
                            Can be 'forward' or 'reverse'
     :param save_path: Path to a folder in which to store the prediction chunks.
     :param stride: stride length between frames for faster imputation.
@@ -206,13 +205,14 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
     # Get the start frame and number of frames after splitting the data up
     markers = markers[::stride, :]
     bad_frames = bad_frames[::stride, :]
-    n_frames = np.floor(markers.shape[0]/n_folds).astype('int32')
-    start_frame = n_frames * fold_id
+    n_frames = int(np.floor(markers.shape[0]/n_folds))
+    fold_id = int(fold_id)
+    start_frame = n_frames * int(fold_id)
 
     # Also predict the remainder if on the last fold.
     if fold_id == (n_folds-1):
-        markers = markers[start_frame:(start_frame + n_frames), :]
-        bad_frames = bad_frames[start_frame:(start_frame + n_frames), :]
+        markers = markers[start_frame:, :]
+        bad_frames = bad_frames[start_frame:, :]
     else:
         markers = markers[start_frame:(start_frame + n_frames), :]
         bad_frames = bad_frames[start_frame:(start_frame + n_frames), :]
@@ -222,8 +222,7 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
         print('Loading model')
         model = load_model(model_path)
 
-    # Check how many outputs the model has, and how many members if returning
-    # member data.
+    # Check how many outputs the model has to handle it appropriately
     n_outputs = len(model.output_shape)
     if n_outputs == 2:
         return_member_data = True
@@ -247,7 +246,7 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
 
     # If the model can return the member predictions, do so.
     if return_member_data:
-        print('Imputing markers: %s pass' % (pass_direction))
+        print('Imputing markers: %s pass' % (pass_direction), flush=True)
         preds, bad_frames, member_preds = \
             predict_markers(model, markers, bad_frames,
                             markers_to_fix=markers_to_fix,
@@ -255,14 +254,16 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
                             return_member_data=return_member_data)
     else:
         # Forward predict
-        print('Imputing markers: %s pass' % (pass_direction))
+        print('Imputing markers: %s pass' % (pass_direction), flush=True)
         preds, bad_frames = \
             predict_markers(model, markers, bad_frames,
                             markers_to_fix=markers_to_fix,
                             error_diff_thresh=error_diff_thresh,
                             return_member_data=return_member_data)
-                            
+
+    # Flip the data for the reverse cases to save in the correct direction.
     if pass_direction == 'reverse':
+        markers = markers[::-1, :]
         preds = preds[::-1, :]
         bad_frames = bad_frames[::-1, :]
         member_preds = member_preds[:, ::-1, :]
