@@ -140,11 +140,11 @@ def merge(save_path, *fold_paths):
         s = 'Saving to %s' % (save_path)
         print(s)
         with h5py.File(save_path, "w") as f:
-            f.create_dataset("preds", preds)
-            f.create_dataset("markers", markers)
-            f.create_dataset("badFrames", bad_frames)
-            f.create_dataset("member_predsF", member_predsF)
-            f.create_dataset("member_predsR", member_predsR)
+            f.create_dataset("preds", data=preds)
+            f.create_dataset("markers", data=markers)
+            f.create_dataset("badFrames", data=bad_frames)
+            f.create_dataset("member_predsF", data=member_predsF)
+            f.create_dataset("member_predsR", data=member_predsR)
         # savemat(save_path, {'preds': preds, 'markers': markers,
         #                     'badFrames': bad_frames,
         #                     'member_predsF': member_predsF,

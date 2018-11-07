@@ -5,7 +5,7 @@
 #SBATCH -n 1               # number of tasks
 #SBATCH --gres=gpu:1        # number of total gpus
 #SBATCH --mem 30000        # memory for all cores
-#SBATCH -t 0-3:00          # time (D-HH:MM)
+#SBATCH -t 0-12:00          # time (D-HH:MM)
 #SBATCH --export=ALL
 #SBATCH -o Job.%N.%j.out    # STDOUT
 #SBATCH -e Job.%N.%j.err    # STDERR
