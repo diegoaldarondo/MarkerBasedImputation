@@ -3,8 +3,8 @@
 #SBATCH -p gpu_requeue      # partition (queue)
 #SBATCH -N 1                # number of nodes
 #SBATCH -n 2             # number of tasks
-#SBATCH --gres=gpu:1        # number of total gpus
-#SBATCH --mem 40000        # memory for all cores
+#SBATCH --gres=gpu:4        # number of total gpus
+#SBATCH --mem 160000        # memory for all cores
 #SBATCH -t 0-7:00          # time (D-HH:MM)
 #SBATCH --export=ALL
 #SBATCH -o Job.%N.%j.out    # STDOUT

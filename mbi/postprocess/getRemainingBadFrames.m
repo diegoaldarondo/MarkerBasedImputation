@@ -9,7 +9,7 @@ function badFrames = getRemainingBadFrames(preds,varargin)
 % 
 % Optional Inputs:
 %    threshold - Threshold at which to trigger a bad frame. Default 0.6. 
-%    Metric is the z-scored energy of jerk.
+%    Metric is the z-scored energy of jerk (for now only of spineF).
 % 
 %    surround - Number of surrounding frames to flag in the event of a
 %    trigger. Default 150.
@@ -38,12 +38,12 @@ if numvarargs > 2
     error('myfuns:somefun2Alt:TooManyInputs', ...
         'Accepts at most 2 optional inputs');
 end
-optargs = {.6 150};
+optargs = {1 150};
 optargs(1:numvarargs) = varargin;
 [threshold, surround] = optargs{:};
 
 % Calculate Jerk
-jerk = diffpad(diffpad(diffpad(preds)));
+jerk = diffpad(diffpad(diffpad(preds(:,[10,12]))));
 
 % Get the z-score of total jerk energy
 jerkEnergy = jerk.^2;
@@ -55,5 +55,4 @@ zJerkEnergy = movmax(zJerkEnergy,surround);
 
 % Find the bad frames
 badFrames = zJerkEnergy>threshold;
-
 end

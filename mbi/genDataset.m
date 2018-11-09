@@ -22,11 +22,10 @@ function genDataset(mocapPaths, savePath)
 %------------- BEGIN CODE --------------
 
 %% Load the Data
-
 mocap_data = cellfun(@(X) load(X), mocapPaths,'uni',0);
 
 %% Extract the aligned markers
-[markers, bad_frames] = deal(cell(numel(mocapPaths),1));
+[markers, bad_frames, move_frames, move_frames_fast] = deal(cell(numel(mocapPaths),1));
 for i = 1:numel(mocapPaths)
     try
         markers{i} = struct2array(mocap_data{i}.markers_aligned_preproc);
@@ -36,6 +35,11 @@ for i = 1:numel(mocapPaths)
         for j = 1:numel(mocap_data{i}.bad_frames_agg)
             bad_frames{i}(mocap_data{i}.bad_frames_agg{j},j) = true;
         end
+        
+        move_frames{i} = false(size(markers{i},1), 1);
+        move_frames_fast{i} = false(size(markers{i},1), 1);
+        move_frames{i}(mocap_data{i}.move_frames,:) = true;
+        move_frames_fast{i}(mocap_data{i}.move_frames_fast,:) = true;
     catch
         markers{i} = struct2array(mocap_data(i).markers_aligned_preproc);
         bad_frames{i} = false(size(markers{i},1), size(markers{i},2)./3);
@@ -44,6 +48,11 @@ for i = 1:numel(mocapPaths)
         for j = 1:numel(mocap_data(i).bad_frames_agg)
             bad_frames{i}(mocap_data(i).bad_frames_agg{j},j) = true;
         end
+        
+        move_frames{i} = false(size(markers{i},1), 1);
+        move_frames_fast{i} = false(size(markers{i},1), 1);
+        move_frames{i}(mocap_data(i).move_frames,:) = true;
+        move_frames_fast{i}(mocap_data(i).move_frames_fast,:) = true;
     end
 end
 
@@ -52,6 +61,8 @@ markers = cat(1, markers{:});
 marker_means = nanmean(markers,1);
 marker_stds = nanstd(markers,1);
 bad_frames = uint8(cat(1,bad_frames{:}));
+move_frames = uint8(cat(1,move_frames{:}));
+move_frames_fast = uint8(cat(1,move_frames_fast{:}));
 
 % If there exists only a single elbow/arm marker, treat both as bad.
 larm = [11 12];
@@ -72,9 +83,12 @@ end
 % markers = zscore(markers,1)
 markers = (markers-marker_means)./marker_stds;
 markers(isnan(markers)) = 0;
+
 %% Save the data to an h5 file
 h5save(savePath,markers,'markers')
 h5save(savePath,bad_frames,'bad_frames')
 h5save(savePath,marker_means,'marker_means')
 h5save(savePath,marker_stds,'marker_stds')
+h5save(savePath,move_frames,'move_frames')
+h5save(savePath,move_frames_fast,'move_frames_fast')
 end
