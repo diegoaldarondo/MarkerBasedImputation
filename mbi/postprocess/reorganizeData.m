@@ -89,5 +89,5 @@ for i = 1:numel(mocap_paths)
     % Save out 
     savePath = [mocap_paths{i}(1:end-4)  '_imputed.mat'];
     save(savePath,'-struct','mocap','-v7.3');
-    totalFramesRead = totalFramesRead + numFrames;
+    totalFramesRead = totalFramesRead + numFrames/stride;
 end
