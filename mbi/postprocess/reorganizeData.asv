@@ -10,7 +10,8 @@ function reorganizeData(originalDirectory,imputationPath,copyOriginal)
 % Inputs: originalDirectory - Path to directory containing original datasets.
 %         Path to imputation file. 
 %         imputationPath - Path to the imputation .h5 file.  
-%         C
+%         copyOriginal - Boolean determining whether or not to copy the
+%         contents of the original mocap struct. 
 %
 % Notes: The new .mat file shares the same name as its original, but with
 %        '_imputed' appended to the end of the file name. 
@@ -40,6 +41,7 @@ end
 mocap_paths = fullfile({d(B).folder},{d(B).name});
 
 %% Get postprocessing data
+fprintf('Postprocessing data\n')
 [markersFinal,~,imputedFrames,remainingBadFrames] = postprocessMBI(imputationPath);
 
 %% Put the appropriate chunk in the correct file. 
@@ -48,9 +50,9 @@ stride = 5;
 for i = 1:numel(mocap_paths)
     fprintf('Reformatting %s\n',mocap_paths{i})
     mocap = load(mocap_paths{i});
-
+    
     [numFrames, numMarkers] = size(struct2array(mocap.markers_preproc));
-    imputed_markers = markersFinal(totalFramesRead:(totalFramesRead + (numFrames/stride)-1),:);
+    imputed_markers = markersFinal(totalFramesRead:(totalFramesRead + round((numFrames/stride))-1),:);
     imputed_frames = imputedFrames(totalFramesRead:(totalFramesRead + (numFrames/stride)-1),:);
     remaining_bad_frames = remainingBadFrames(totalFramesRead:(totalFramesRead + (numFrames/stride)-1));
     
@@ -78,7 +80,7 @@ for i = 1:numel(mocap_paths)
     mocap.remaining_bad_frames = repelem(remaining_bad_frames,stride,1);
     
     % Reformat to Jesse's structures. 
-    for j = 1:numel(mocap.markernames)
+    for j = 1:numel(markernames)
         mocap.imputed_markers.(markernames{j}) =...
             imputed_markers(:,(j-1)*3 + (1:3));
         mocap.imputed_bad_frames_agg{j} = find(imputed_frames(:,j));
@@ -86,6 +88,6 @@ for i = 1:numel(mocap_paths)
     
     % Save out 
     savePath = [mocap_paths{i}(1:end-4)  '_imputed.mat'];
-    save(savePath,'-struct','orig','-v7.3');
-    totalFramesRead = totalFramesRead + numFrames;
+    save(savePath,'-struct','mocap','-v7.3');
+    totalFramesRead = totalFramesRead + numFrames/stride;
 end

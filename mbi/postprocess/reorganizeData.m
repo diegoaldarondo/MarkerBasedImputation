@@ -52,8 +52,8 @@ for i = 1:numel(mocap_paths)
     mocap = load(mocap_paths{i});
     
     [numFrames, numMarkers] = size(struct2array(mocap.markers_preproc));
-    imputed_markers = markersFinal(totalFramesRead:(totalFramesRead + (numFrames/stride)-1),:);
-    imputed_frames = imputedFrames(totalFramesRead:(totalFramesRead + (numFrames/stride)-1),:);
+    imputed_markers = markersFinal(totalFramesRead:(totalFramesRead + round((numFrames/stride))-1),:);
+    imputed_frames = imputedFrames(totalFramesRead:(totalFramesRead + round((numFrames/stride))-1),:);
     remaining_bad_frames = remainingBadFrames(totalFramesRead:(totalFramesRead + (numFrames/stride)-1));
     
     upsampled_imputed_frames = cell(size(imputed_frames,2));
@@ -89,5 +89,5 @@ for i = 1:numel(mocap_paths)
     % Save out 
     savePath = [mocap_paths{i}(1:end-4)  '_imputed.mat'];
     save(savePath,'-struct','mocap','-v7.3');
-    totalFramesRead = totalFramesRead + numFrames/stride;
+    totalFramesRead = totalFramesRead + round(numFrames/stride);
 end
