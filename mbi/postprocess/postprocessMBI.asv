@@ -81,16 +81,14 @@ for i = 1:size(markers,2)
 end
 
 % Smooth the predicitons
-padding = smoothingWindow;
 for i = 1:size(badFrames,2)
     CC = bwconncomp(badFrames(:,i));
     markerIds = (i-1)*3 + (1:3);
     for j = 1:numel(CC.PixelIdxList)
         frameIds = CC.PixelIdxList{j};
-        frameIds = (frameIds(1) - padding):(frameIds(end) + padding);
-        frameIds = frameIds((frameIds > 0) & (frameIds < size(preds,1)));
-        preds(frameIds,markerIds) =...
-            smoothdata(preds(frameIds,markerIds),...
+        frameIds = frameIds(1) - 5:frameIds(end):5)
+        preds(CC.PixelIdxList{j},markerIds) =...
+            smoothdata(preds(CC.PixelIdxList{j},markerIds),...
                        'movmedian',smoothingWindow);
     end
 end
