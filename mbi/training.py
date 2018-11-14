@@ -46,7 +46,7 @@ def create_model(net_name, **kwargs):
 
 def train(data_path, *, base_output_path="models", run_name=None,
           data_name=None, net_name="wave_net", clean=False, input_length=9,
-          output_length=1,  n_markers=60, train_fraction=.85,
+          output_length=1,  n_markers=60, stride=1, train_fraction=.85,
           val_fraction=0.15, n_filters=512, filter_width=2, layers_per_level=3,
           n_dilations=None, latent_dim=750, epochs=50, batch_size=1000,
           lossfunc='mean_squared_error', lr=1e-4, batches_per_epoch=0,
@@ -66,6 +66,7 @@ def train(data_path, *, base_output_path="models", run_name=None,
     :param input_length: Number of frames to input into model
     :param output_length: Number of frames model will attempt to predict
     :param n_markers: Number of markers to use
+    :param stride: Downsampling rate of training set.
     :param train_fraction: Fraction of dataset to use as training
     :param val_fraction: Fraction of dataset to use as validation
     :param filter_width: Width of base convolution filter
@@ -102,6 +103,8 @@ def train(data_path, *, base_output_path="models", run_name=None,
     # Load Data
     print('Loading Data')
     markers, marker_means, marker_stds, bad_frames = load_dataset(data_path)
+    markers = markers[::stride, :]
+    bad_frames = bad_frames[::stride, :]
 
     # Get Ids
     print('Getting indices')
@@ -164,7 +167,7 @@ def train(data_path, *, base_output_path="models", run_name=None,
     savemat(os.path.join(run_path, "training_info.mat"),
             {"data_path": data_path, "base_output_path": base_output_path,
              "run_name": run_name, "data_name": data_name,
-             "net_name": net_name, "clean": clean,
+             "net_name": net_name, "clean": clean, "stride": stride,
              "input_length": input_length, "output_length": output_length,
              "n_filters": n_filters, "n_markers": n_markers, "epochs": epochs,
              "batch_size": batch_size, "train_fraction": train_fraction,

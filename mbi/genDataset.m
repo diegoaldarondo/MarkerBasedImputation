@@ -91,4 +91,5 @@ h5save(savePath,marker_means,'marker_means')
 h5save(savePath,marker_stds,'marker_stds')
 h5save(savePath,move_frames,'move_frames')
 h5save(savePath,move_frames_fast,'move_frames_fast')
+hdf5write(savePath,'mocapPaths',mocapPaths)
 end
