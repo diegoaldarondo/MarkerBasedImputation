@@ -17,7 +17,7 @@ function genDataset(mocapPaths, savePath)
 % Author: Diego Aldarondo
 % Work address
 % email: diegoaldarondo@g.harvard.edu
-% October 2018; Last revision: 15-October-2018
+% October 2018; Last revision: 14-November-2018
 
 %------------- BEGIN CODE --------------
 
@@ -91,5 +91,7 @@ h5save(savePath,marker_means,'marker_means')
 h5save(savePath,marker_stds,'marker_stds')
 h5save(savePath,move_frames,'move_frames')
 h5save(savePath,move_frames_fast,'move_frames_fast')
+% Despite being deprecated, this supports writing cell arrays of strings 
+% to h5 files. 
 hdf5write(savePath,'mocapPaths',mocapPaths)
 end

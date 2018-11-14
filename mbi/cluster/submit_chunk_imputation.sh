@@ -7,11 +7,11 @@
 #SBATCH --mem 30000        # memory for all cores
 #SBATCH -t 0-12:00          # time (D-HH:MM)
 #SBATCH --export=ALL
-#SBATCH -o logs/Job.%N.%j.out    # STDOUT
-#SBATCH -e logs/Job.%N.%j.err    # STDERR
+#SBATCH -o logs/Job.chunkImputation.%N.%j.out    # STDOUT
+#SBATCH -e logs/Job.chunkImputation.%N.%j.err    # STDERR
 srun -l -n1 hostname
 srun -l -n1 echo $CUDA_VISIBLE_DEVICES
 
 PREDFUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/predict_single_pass.py"
-srun -l --gres=gpu:1 -n1 --mem=30000 cluster/py.sh $PREDFUNC $1 $2 $3 --save-path=$4 --stride=$5 --n-folds=$6 --fold-id=$7 --error-diff-thresh=.375 &
+srun -l --gres=gpu:1 -n1 --mem=30000 cluster/py.sh $PREDFUNC $1 $2 $3 --save-path=$4 --stride=$5 --n-folds=$6 --fold-id=$7 --error-diff-thresh=.5 &
 wait

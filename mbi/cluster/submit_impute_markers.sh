@@ -7,8 +7,8 @@
 #SBATCH --mem 60000        # memory for all cores
 #SBATCH -t 0-24:00          # time (D-HH:MM)
 #SBATCH --export=ALL
-#SBATCH -o Job.%N.%j.out    # STDOUT
-#SBATCH -e Job.%N.%j.err    # STDERR
+#SBATCH -o logs/Job.imputeMarkers.%N.%j.out    # STDOUT
+#SBATCH -e logs/Job.imputeMarkers.%N.%j.err    # STDERR
 
 srun -l -n1 hostname
 srun -l -n1 echo $CUDA_VISIBLE_DEVICES
