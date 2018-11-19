@@ -89,6 +89,7 @@ def predict_markers(model, X, bad_frames, markers_to_fix=None,
             # Only use the predictions for the bad markers. Take the
             # predictions and append to the end of X_start for future
             # prediction.
+            # TODO: fix the member_pred saving 
             pred[:, 0, ~bad_frames[next_frame_id, :]] = \
                 X[:, next_frame_id, ~bad_frames[next_frame_id, :]]
             member_pred[:, 0, ~bad_frames[next_frame_id, :]] = 0

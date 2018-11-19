@@ -6,7 +6,8 @@ addpath(genpath('C:\code\Olveczky\OlveczkyToolbox'))
 addpath(genpath('C:/code/talmos-toolbox'))
 addpath(genpath('C:/code/Olveczky/MarkerBasedImputation/mbi'))
 
-imputationPath = 'Y:\Diego\data\JDM25_caff_imputation_test\predictions\diffThreshTest\fullDay_model_ensemble.h5';
+% imputationPath = 'Y:\Diego\data\JDM25_caff_imputation_test\predictions\diffThreshTest\fullDay_model_ensemble.h5';
+imputationPath = 'Y:\Diego\data\JDM25_caff_imputation_test\predictions\strideTest_thresh_5\fullDay_model_ensemble.h5';
 skeletonPath = 'Y:\Diego\data\JDM25_caff_imputation_test\skeleton.mat';
 load(skeletonPath);
 
@@ -21,15 +22,18 @@ rat = Animal('path',imputationPath,'skeleton',skeleton,'embed',embed,'embedFrame
 %% Postprocess
 rat.postProcess();
 
-%% View the rat
-markersets = {'aligned','imputed'};
-rat.movie(markersets);
+%% View trajectories of markers
+close all;
+frameIds = 100000:102500;
+markerIds = find(repelem(contains(skeleton.nodes,{'Arm','Elbow'}),3,1));
+rat.compareTraces(frameIds,markerIds);
 
-%% View the rat and the embedding simultaneously
-markerset = {'aligned','imputed'};
-rat.embedMovie(markerset)
+%% View the rat and embedding simultaneously
+close all;
+markersets = {'aligned','imputed','embed'};
+h = rat.movie(markersets);
 
 %% Write a movie
 frameIds = [98931:103931];
-savePath = 'C:\code\Olveczky\MotionAnalysis\viz\videos\fullDay_waveNet_thresh_5.mp4';
+savePath = 'C:\code\Olveczky\MotionAnalysis\viz\videos\fullDay_waveNet_thresh_5_.mp4';
 rat.writeMovie(markersets,frameIds,savePath,'FPS',60);

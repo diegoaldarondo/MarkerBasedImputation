@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -J MultiNodeTrain
-#SBATCH -p fas_gpu      # partition (queue)
+#SBATCH -p gpu_requeue      # partition (queue)
 #SBATCH -N 1                # number of nodes
 #SBATCH -n 1              # number of tasks
 #SBATCH --gres=gpu:1        # number of total gpus
@@ -16,9 +16,9 @@ srun -l -n1 echo $CUDA_VISIBLE_DEVICES
 # Specify paths and variables for training. Be sure all arrays have the same length.
 FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/training.py"
 DATAPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM31_imputation_test/JDM31_fullDay.h5")
 BASEOUTPUTPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models/strideTest")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM31_imputation_test/models/strideTest")
 
 # Run training with parameters specified above.
 
