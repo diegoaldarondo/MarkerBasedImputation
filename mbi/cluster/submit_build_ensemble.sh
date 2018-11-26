@@ -11,19 +11,19 @@
 #SBATCH -e logs/Job.buildEns.%N.%j.err    # STDERR
 
 FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/build_ensemble.py"
-MODELBASEPATH="/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models/strideTest"
+MODELBASEPATH="/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM31_imputation_test/models/strideTest"
 
 MODELS=(\
-"JDM25_fullDay-wave_net_epochs=30_input_9_output_1/best_model.h5" \
-"JDM25_fullDay-wave_net_epochs=30_input_9_output_1_01/best_model.h5" \
-"JDM25_fullDay-wave_net_epochs=30_input_9_output_1_02/best_model.h5" \
-"JDM25_fullDay-wave_net_epochs=30_input_9_output_1_03/best_model.h5" \
-"JDM25_fullDay-wave_net_epochs=30_input_9_output_1_04/best_model.h5" \
-"JDM25_fullDay-wave_net_epochs=30_input_9_output_1_05/best_model.h5" \
-"JDM25_fullDay-wave_net_epochs=30_input_9_output_1_06/best_model.h5" \
-"JDM25_fullDay-wave_net_epochs=30_input_9_output_1_07/best_model.h5" \
-"JDM25_fullDay-wave_net_epochs=30_input_9_output_1_08/best_model.h5" \
-"JDM25_fullDay-wave_net_epochs=30_input_9_output_1_09/best_model.h5")
+"JDM31_fullDay-wave_net_epochs=30_input_9_output_1/best_model.h5" \
+"JDM31_fullDay-wave_net_epochs=30_input_9_output_1_01/best_model.h5" \
+"JDM31_fullDay-wave_net_epochs=30_input_9_output_1_02/best_model.h5" \
+"JDM31_fullDay-wave_net_epochs=30_input_9_output_1_03/best_model.h5" \
+"JDM31_fullDay-wave_net_epochs=30_input_9_output_1_04/best_model.h5" \
+"JDM31_fullDay-wave_net_epochs=30_input_9_output_1_05/best_model.h5" \
+"JDM31_fullDay-wave_net_epochs=30_input_9_output_1_06/best_model.h5" \
+"JDM31_fullDay-wave_net_epochs=30_input_9_output_1_07/best_model.h5" \
+"JDM31_fullDay-wave_net_epochs=30_input_9_output_1_08/best_model.h5" \
+"JDM31_fullDay-wave_net_epochs=30_input_9_output_1_09/best_model.h5")
 
 srun -l --gres=gpu:1 -n1 --mem=40000 cluster/py.sh $FUNC $MODELBASEPATH ${MODELS[*]} --run-name="model_ensemble"
 

@@ -23,11 +23,9 @@ function genDataset(mocapPaths, savePath)
 
 %% Load the Data
 vars = {'markers_aligned_preproc','bad_frames_agg','move_frames','move_frames_fast'};
-% mocap_data = cellfun(@(X) load(X,vars{:}), mocapPaths,'uni',0);
-
-mocap_data = cell(numel(mocapPaths),1);
-parfor i = 1:numel(mocapPaths)
-    mocap_data{i} = load(mocapPaths{i},vars{:});
+mocap_data = cellfun(@(X) load(X,vars{:}), mocapPaths,'uni',0);
+for i = 1:numel(mocapPaths)
+    
 end
 %% Extract the aligned markers
 [markers, bad_frames, move_frames, move_frames_fast] = deal(cell(numel(mocapPaths),1));

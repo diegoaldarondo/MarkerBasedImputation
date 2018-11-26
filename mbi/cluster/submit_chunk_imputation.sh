@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -J ChunkImputation
-#SBATCH -p gpu_requeue     # partition (queue)
+#SBATCH -p fas_gpu     # partition (queue)
 #SBATCH -N 1                # number of nodes
 #SBATCH -n 1               # number of tasks
 #SBATCH --gres=gpu:1        # number of total gpus

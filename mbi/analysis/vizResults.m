@@ -7,7 +7,7 @@ addpath(genpath('C:/code/talmos-toolbox'))
 addpath(genpath('C:/code/Olveczky/MarkerBasedImputation/mbi'))
 
 % imputationPath = 'Y:\Diego\data\JDM25_caff_imputation_test\predictions\diffThreshTest\fullDay_model_ensemble.h5';
-imputationPath = 'Y:\Diego\data\JDM25_caff_imputation_test\predictions\strideTest_thresh_5\fullDay_model_ensemble.h5';
+imputationPath = 'Y:\Diego\data\JDM31_imputation_test\predictions\strideTest_thresh_5\fullDay_model_ensemble.h5';
 skeletonPath = 'Y:\Diego\data\JDM25_caff_imputation_test\skeleton.mat';
 load(skeletonPath);
 
@@ -29,8 +29,12 @@ markerIds = find(repelem(contains(skeleton.nodes,{'Arm','Elbow'}),3,1));
 rat.compareTraces(frameIds,markerIds);
 
 %% View the rat and embedding simultaneously
-close all;
-markersets = {'aligned','imputed','embed'};
+% close all;
+figure; 
+% markersets = {'aligned','imputed','embed'};
+markersets = {'aligned','imputed'};
+% markersets = {'aligned','imputed','global'};
+
 h = rat.movie(markersets);
 
 %% Write a movie

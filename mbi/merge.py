@@ -1,7 +1,7 @@
 """Imputes markers with mbi models."""
 import clize
-import numpy as np
 import h5py
+import numpy as np
 from scipy.io import savemat, loadmat
 from skimage import measure
 
@@ -30,15 +30,19 @@ def merge(save_path, *fold_paths):
     bad_framesR = None
     predsF = None
     predsR = None
-    member_predsF = None
-    member_predsR = None
+    # member_predsF = None
+    # member_predsR = None
+
+    member_stdsF = None
+    member_stdsR = None
     for i in range(n_folds_to_merge):
         print('%d' % (i), flush=True)
         data = loadmat(fold_paths[i])
         pass_direction = data['pass_direction'][:]
         markers_single_fold = np.array(data['markers'][:])
         preds_single_fold = np.array(data['preds'][:])
-        member_preds_single_fold = np.array(data['member_preds'][:])
+        # member_preds_single_fold = np.array(data['member_preds'][:])
+        member_stds_single_fold = np.array(data['member_stds'][:])
         bad_frames_single_fold = np.array(data['bad_frames'][:])
 
         if (markers is None) & (pass_direction == 'forward'):
@@ -70,28 +74,43 @@ def merge(save_path, *fold_paths):
             predsR = \
                 np.concatenate((predsR, preds_single_fold), axis=0)
 
-        if (member_predsF is None) & (pass_direction == 'forward'):
-            member_predsF = member_preds_single_fold
-        elif (pass_direction == 'forward'):
-            member_predsF = \
-                np.concatenate((member_predsF,
-                                member_preds_single_fold), axis=1)
+        # if (member_predsF is None) & (pass_direction == 'forward'):
+        #     member_predsF = member_preds_single_fold
+        # elif (pass_direction == 'forward'):
+        #     member_predsF = \
+        #         np.concatenate((member_predsF,
+        #                         member_preds_single_fold), axis=1)
+        #
+        # if (member_predsR is None) & (pass_direction == 'reverse'):
+        #     member_predsR = member_preds_single_fold
+        # elif (pass_direction == 'reverse'):
+        #     member_predsR = \
+        #         np.concatenate((member_predsR,
+        #                         member_preds_single_fold), axis=1)
 
-        if (member_predsR is None) & (pass_direction == 'reverse'):
-            member_predsR = member_preds_single_fold
+        if (member_stdsF is None) & (pass_direction == 'forward'):
+            member_stdsF = member_stds_single_fold
+        elif (pass_direction == 'forward'):
+            member_stdsF = \
+                np.concatenate((member_stdsF,
+                                member_stds_single_fold), axis=0)
+
+        if (member_stdsR is None) & (pass_direction == 'reverse'):
+            member_stdsR = member_stds_single_fold
         elif (pass_direction == 'reverse'):
-            member_predsR = \
-                np.concatenate((member_predsR,
-                                member_preds_single_fold), axis=1)
+            member_stdsR = \
+                np.concatenate((member_stdsR,
+                                member_stds_single_fold), axis=0)
 
     marker_means = np.array(data['marker_means'][:])
     marker_stds = np.array(data['marker_stds'][:])
     data = None
 
     print(markers.shape)
+    print(member_stdsF.shape)
     print(predsF.shape)
     print(bad_framesF.shape)
-    print(member_predsF.shape)
+    # print(member_predsF.shape)
     print(marker_means.shape)
     print(marker_stds.shape, flush=True)
     # Convert to real world coordinates
@@ -119,6 +138,7 @@ def merge(save_path, *fold_paths):
     # a logistic function
     print('Computing weighted average', flush=True)
     preds = np.zeros(predsF.shape)
+    member_stds = np.zeros(member_stdsF.shape)
     for i in range(bad_frames.shape[1]*3):
         print('marker number: %d' % (i), flush=True)
         is_bad = bad_frames[:, np.floor(i/3).astype('int32')]
@@ -134,6 +154,9 @@ def merge(save_path, *fold_paths):
             preds[CC == (j+1), i] = \
                 (predsF[CC == (j+1), i]*weightF) +\
                 (predsR[CC == (j+1), i]*weightR)
+            member_stds[CC == (j+1), i] = \
+                np.sqrt(((member_stdsF[CC == (j+1), i]**2)*weightF) +
+                ((member_stdsR[CC == (j+1), i]**2)*weightR))
 
     # Save predictions to a matlab file.
     if save_path is not None:
@@ -143,8 +166,9 @@ def merge(save_path, *fold_paths):
             f.create_dataset("preds", data=preds)
             f.create_dataset("markers", data=markers)
             f.create_dataset("badFrames", data=bad_frames)
-            f.create_dataset("member_predsF", data=member_predsF)
-            f.create_dataset("member_predsR", data=member_predsR)
+            # f.create_dataset("member_predsF", data=member_predsF)
+            # f.create_dataset("member_predsR", data=member_predsR)
+            f.create_dataset("member_stds", data=member_stds)
         # savemat(save_path, {'preds': preds, 'markers': markers,
         #                     'badFrames': bad_frames,
         #                     'member_predsF': member_predsF,

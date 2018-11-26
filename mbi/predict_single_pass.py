@@ -59,7 +59,7 @@ def predict_markers(model, X, bad_frames, markers_to_fix=None,
 
     if return_member_data:
         n_members = model.output_shape[1][1]
-        member_preds = np.zeros((n_members, X.shape[1], X.shape[2]))
+        member_stds = np.zeros((1, X.shape[1], X.shape[2]))
         member_pred = np.zeros((1, n_members, X.shape[2]))
 
         # At each step, generate a prediction, replace the predictions of
@@ -89,14 +89,14 @@ def predict_markers(model, X, bad_frames, markers_to_fix=None,
             # Only use the predictions for the bad markers. Take the
             # predictions and append to the end of X_start for future
             # prediction.
-            # TODO: fix the member_pred saving 
             pred[:, 0, ~bad_frames[next_frame_id, :]] = \
                 X[:, next_frame_id, ~bad_frames[next_frame_id, :]]
-            member_pred[:, 0, ~bad_frames[next_frame_id, :]] = 0
+            member_pred[:, :, ~bad_frames[next_frame_id, :]] = float('nan')
+            member_std = np.nanstd(member_pred, axis=1)
             preds[:, next_frame_id, :] = np.squeeze(pred)
-            member_preds[:, next_frame_id, :] = np.squeeze(member_pred)
+            member_stds[0, next_frame_id, :] = np.squeeze(member_std)
             X_start = np.concatenate((X_start[:, 1:, :], pred), axis=1)
-        return np.squeeze(preds), bad_frames, member_preds
+        return np.squeeze(preds), bad_frames, member_stds
     else:
         # At each step, generate a prediction, replace the predictions of
         # markers you do not want to predict with the ground truth, and append
@@ -229,7 +229,7 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
         return_member_data = True
     else:
         return_member_data = False
-        member_preds = [None]
+        member_stds = [None]
 
     # Set Markers to fix
     if markers_to_fix is None:
@@ -248,7 +248,7 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
     # If the model can return the member predictions, do so.
     if return_member_data:
         print('Imputing markers: %s pass' % (pass_direction), flush=True)
-        preds, bad_frames, member_preds = \
+        preds, bad_frames, member_stds = \
             predict_markers(model, markers, bad_frames,
                             markers_to_fix=markers_to_fix,
                             error_diff_thresh=error_diff_thresh,
@@ -267,7 +267,7 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
         markers = markers[::-1, :]
         preds = preds[::-1, :]
         bad_frames = bad_frames[::-1, :]
-        member_preds = member_preds[:, ::-1, :]
+        member_stds = member_stds[:, ::-1, :]
 
     # Save predictions to a matlab file.
     if save_path is not None:
@@ -278,7 +278,8 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
         print('Saving to %s' % (save_path))
         savemat(save_path, {'preds': preds, 'markers': markers,
                             'bad_frames': bad_frames,
-                            'member_preds': member_preds, 'n_folds': n_folds,
+                            'member_stds': np.squeeze(member_stds),
+                            'n_folds': n_folds,
                             'fold_id': fold_id,
                             'pass_direction': pass_direction,
                             'marker_means': marker_means,
