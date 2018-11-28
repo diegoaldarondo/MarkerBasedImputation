@@ -36,25 +36,46 @@ addpath(genpath('C:\\code\talmos-toolbox'));
 labelPath = 'Y:\Diego\leap\data\leapMarkerTest\markerTest_camera3.labels.mat';
 temp = load(labelPath);
 
-colors = [1 1 0; 0 1 0; 0 1 1; 0 0 1; 1 0 1; 1 0 0];
+% colors = [1 1 0; 0 1 0; 0 1 1; 0 0 1; 1 0 1; 1 0 0];
+% for i = 1:numel(temp.skeleton.segments.color)
+%     segments = string(temp.skeleton.segments.joints{i});
+%     if any(contains(segments,'Head'))
+%        temp.skeleton.segments.color{i} = colors(1,:);
+%     elseif any(contains(segments,{'Shoulder','Elbow','Arm','Forepaw'}) & contains(segments,'L'))
+%        temp.skeleton.segments.color{i} = colors(3,:);
+%     elseif any(contains(segments,{'Hip','Knee','Shin','Hindpaw'}) & contains(segments,'L'))
+%        temp.skeleton.segments.color{i} = colors(4,:);
+%     elseif any(contains(segments,{'Shoulder','Elbow','Arm','Forepaw'}) & contains(segments,'R'))
+%        temp.skeleton.segments.color{i} = colors(5,:);
+%     elseif any(contains(segments,{'Hip','Knee','Shin','Hindpaw'}) & contains(segments,'R'))
+%        temp.skeleton.segments.color{i} = colors(6,:);
+%     elseif any(contains(segments,{'Spine','Offset'}))
+%        temp.skeleton.segments.color{i} = colors(2,:);
+%     end
+% end
+
+colors = lines(7);
 for i = 1:numel(temp.skeleton.segments.color)
     segments = string(temp.skeleton.segments.joints{i});
     if any(contains(segments,'Head'))
-       temp.skeleton.segments.color{i} = colors(1,:);
-    elseif any(contains(segments,{'Shoulder','Elbow','Arm','Forepaw'}) & contains(segments,'L'))
        temp.skeleton.segments.color{i} = colors(3,:);
-    elseif any(contains(segments,{'Hip','Knee','Shin','Hindpaw'}) & contains(segments,'L'))
-       temp.skeleton.segments.color{i} = colors(4,:);
-    elseif any(contains(segments,{'Shoulder','Elbow','Arm','Forepaw'}) & contains(segments,'R'))
-       temp.skeleton.segments.color{i} = colors(5,:);
-    elseif any(contains(segments,{'Hip','Knee','Shin','Hindpaw'}) & contains(segments,'R'))
+    elseif any(contains(segments,{'Shoulder','Elbow','Arm','Forepaw'}) & contains(segments,'L'))
        temp.skeleton.segments.color{i} = colors(6,:);
-    elseif any(contains(segments,{'Spine','Offset'}))
+    elseif any(contains(segments,{'Hip','Knee','Shin','Hindpaw'}) & contains(segments,'L'))
+       temp.skeleton.segments.color{i} = colors(1,:);
+    elseif any(contains(segments,{'Shoulder','Elbow','Arm','Forepaw'}) & contains(segments,'R'))
        temp.skeleton.segments.color{i} = colors(2,:);
+    elseif any(contains(segments,{'Hip','Knee','Shin','Hindpaw'}) & contains(segments,'R'))
+       temp.skeleton.segments.color{i} = colors(7,:);
+    elseif any(contains(segments,{'Spine','Offset'}))
+       temp.skeleton.segments.color{i} = colors(5,:);
     end
 end
 
 skeleton = temp.skeleton;
+segmentsToOmit = [19,22];
+skeleton.segments(segmentsToOmit,:) = [];
+skeleton.edges(segmentsToOmit,:) = [];
 segments = temp.skeleton.segments;
 
 %% Get the bad frames into a nice vector for framewise vizualization

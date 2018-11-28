@@ -59,6 +59,7 @@ for i = 1:numel(mocapPaths)
         move_frames{i}(mocap_data(i).move_frames,:) = true;
         move_frames_fast{i}(mocap_data(i).move_frames_fast,:) = true;
     end
+    mocap_data{i} = [];
 end
 
 % Concatenate all data

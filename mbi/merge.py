@@ -1,5 +1,6 @@
 """Imputes markers with mbi models."""
 import clize
+import datetime
 import h5py
 import numpy as np
 from scipy.io import savemat, loadmat
@@ -139,24 +140,28 @@ def merge(save_path, *fold_paths):
     print('Computing weighted average', flush=True)
     preds = np.zeros(predsF.shape)
     member_stds = np.zeros(member_stdsF.shape)
+    k = 1
     for i in range(bad_frames.shape[1]*3):
+        start = datetime.datetime.now()
         print('marker number: %d' % (i), flush=True)
         is_bad = bad_frames[:, np.floor(i/3).astype('int32')]
         CC = measure.label(is_bad, background=0)
         num_CC = len(np.unique(CC))-1
         preds[:, i] = predsF[:, i]
         for j in range(num_CC):
-            length_CC = np.sum(CC == (j+1))
+            CC_ids = np.array(np.where(CC == (j+1)))
+            length_CC = CC_ids.shape[0]
             x_0 = np.round(length_CC/2)
-            k = 1
             weightR = sigmoid(np.arange(length_CC), x_0, k)
             weightF = 1-weightR
-            preds[CC == (j+1), i] = \
-                (predsF[CC == (j+1), i]*weightF) +\
-                (predsR[CC == (j+1), i]*weightR)
-            member_stds[CC == (j+1), i] = \
-                np.sqrt(((member_stdsF[CC == (j+1), i]**2)*weightF) +
-                ((member_stdsR[CC == (j+1), i]**2)*weightR))
+            preds[CC_ids, i] = \
+                (predsF[CC_ids, i]*weightF) +\
+                (predsR[CC_ids, i]*weightR)
+            member_stds[CC_ids, i] = \
+                np.sqrt(((member_stdsF[CC_ids, i]**2)*weightF) +
+                        ((member_stdsR[CC_ids, i]**2)*weightR))
+        elapsed = datetime.datetime.now() - start
+        print(elapsed)
 
     # Save predictions to a matlab file.
     if save_path is not None:

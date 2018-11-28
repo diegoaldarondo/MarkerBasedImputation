@@ -3,12 +3,12 @@ import clize
 import datetime
 from keras.models import load_model
 import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 from scipy.io import loadmat, savemat
 from utils import load_dataset, get_ids
-matplotlib.use("Agg")
 
 
 def plot_history(history, save_path):
@@ -62,9 +62,11 @@ def predict_markers(model, X, markers_to_predict, num_frames=True,
     preds = np.zeros((X.shape[0], num_frames, X.shape[2]))
 
     if return_member_data:
-        n_members = model.output_shape[1][1]
-        member_preds = \
-            np.zeros((X.shape[0], n_members, num_frames, X.shape[2]))
+        # n_members = model.output_shape[1][1]
+        # member_preds = \
+        #     np.zeros((X.shape[0], n_members, num_frames, X.shape[2]))
+        member_stds = \
+            np.zeros((X.shape[0], num_frames, X.shape[2]))
         # At each step, generate a prediction, replace the predictions of
         # markers you do not want to predict with the ground truth, and
         # append the resulting vector to the end of the next input chunk.
@@ -73,10 +75,13 @@ def predict_markers(model, X, markers_to_predict, num_frames=True,
             pred[:, 0, ~markers_to_predict] = \
                 X[:, input_length+count, ~markers_to_predict]
             preds[:, i, :] = np.squeeze(pred)
-            member_preds[:, :, i, :] = member_pred
+            # member_preds[:, :, i, :] = member_pred
+
+            member_std = np.nanstd(member_pred, axis=1)
+            member_stds[:, i, :] = member_std
             X_start = np.concatenate((X_start[:, 1:, :], pred), axis=1)
             count += 1
-        return preds, member_preds
+        return preds, member_stds
     else:
         # At each step, generate a prediction, replace the predictions of
         # markers you do not want to predict with the ground truth, and
@@ -165,6 +170,7 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means,
     """
     n_markers = total.shape[2]
     delta_markers = np.zeros((Y.shape[0], Y.shape[1], np.int32(n_markers/3)))
+    total_member_stds = np.zeros((Y.shape[0], Y.shape[1], n_markers))
 
     # Check how many outputs the model has, and how many members if returning
     # member data.
@@ -173,8 +179,10 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means,
         return_member_data = True
     else:
         return_member_data = False
-        member_predsF = [None]
-        member_predsR = [None]
+        # member_predsF = [None]
+        # member_predsR = [None]
+        member_stdsF = [None]
+        member_stdsR = [None]
 
     # For each marker, predict position over all gaps and make plots.
     for marker_id in range(np.int32(n_markers/3)):
@@ -188,13 +196,14 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means,
         start = datetime.datetime.now()
         if return_member_data:
             # Multi predict forward
-            preds, member_predsF = \
+            preds, member_stdsF = \
                 predict_markers(model, total, markers_to_predict,
                                 return_member_data=return_member_data)
             # Multi predict reverse
-            predsR, member_predsR = \
+            predsR, member_stdsR = \
                 predict_markers(model, totalR, markers_to_predict,
                                 return_member_data=return_member_data)
+            member_stdsR = member_stdsR[:, ::-1, :]
         else:
             # Multi predict forward
             preds = \
@@ -229,12 +238,15 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means,
         weightR = sigmoid(np.arange(0, preds_world.shape[1]),
                           preds_world.shape[1]/2, k)
         weight = 1-weightR
-
         preds_world_weighted_average = np.zeros((preds_world.shape))
+        member_stds = np.zeros((preds_world.shape))
         for i in range(preds_world.shape[0]):
             for j in range(preds_world.shape[2]):
                 preds_world_weighted_average[i, :, j] = \
                     preds_world[i, :, j]*weight + predsR_world[i, :, j]*weightR
+                member_stds[i, :, j] = \
+                    np.sqrt(((member_stdsF[i, :, j]**2)*weight) +
+                            ((member_stdsR[i, :, j]**2)*weightR))
         delta = np.abs(Y_world - preds_world_weighted_average)
         delta_marker = np.sqrt(np.sum(delta[:, :, predict_ids]**2, axis=2))
 
@@ -244,8 +256,9 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means,
                                               marker_id, viz_directory)
 
         delta_markers[:, :, marker_id] = delta_marker
+        total_member_stds[:, :, predict_ids] = member_stds[:, :, predict_ids]
 
-    return delta_markers, member_predsF, member_predsR
+    return delta_markers, total_member_stds
 
 
 def analyze_performance(model_base_path, data_path, *, run_name=None,
@@ -316,16 +329,17 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
 
     lengths = np.arange(min_gap_length, max_gap_length+1, 10)
     delta_markers = np.zeros((lengths.shape[0],), dtype=np.object)
-    member_predsF = np.zeros((lengths.shape[0],), dtype=np.object)
-    member_predsR = np.zeros((lengths.shape[0],), dtype=np.object)
+    member_stds = np.zeros((lengths.shape[0],), dtype=np.object)
+    # member_predsF = np.zeros((lengths.shape[0],), dtype=np.object)
+    # member_predsR = np.zeros((lengths.shape[0],), dtype=np.object)
 
     for i in range(lengths.shape[0]):
         # Get Ids
-        print('Getting indices')
+        print('Getting indices %d' % (i), flush=True)
         [input_ids, target_ids] = get_ids(bad_frames, input_length,
                                           input_length + lengths[i],
                                           True, True)
-
+        print(input_ids.shape, flush=True)
         # Get the data corresponding to the indices
         print('Indexing into data')
         X = markers[input_ids[::skip, :], :]
@@ -342,15 +356,17 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
         if not os.path.exists(save_directory):
             os.makedirs(save_directory)
         # Analyze marker predictions over time
-        delta_markers[i], member_predsF[i], member_predsR[i] = \
+        delta_markers[i], member_stds[i] = \
             analyze_marker_predictions(model, total, totalR, Y, marker_means,
                                        marker_stds, save_directory,
                                        plot_distribution=plot_distribution)
 
     print('Saving predictions')
+    # savemat(os.path.join(viz_directory, 'errors.mat'),
+    #         {'delta_markers': delta_markers, 'member_predsF': member_predsF,
+    #          'member_predsR': member_predsR})
     savemat(os.path.join(viz_directory, 'errors.mat'),
-            {'delta_markers': delta_markers, 'member_predsF': member_predsF,
-             'member_predsR': member_predsR})
+            {'delta_markers': delta_markers, 'member_stds': member_stds})
 
 if __name__ == "__main__":
     # Wrapper for running from commandline

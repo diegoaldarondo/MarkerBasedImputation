@@ -60,24 +60,24 @@ switch lower(ext)
     case '.mat'
         load(dataPath,'markers','badFrames','preds');
     case {'.h5', '.hdf5'}
-        markers = h5read(dataPath,'/markers')';
-        preds = h5read(dataPath,'/preds')';
+        markersInitial = h5read(dataPath,'/markers')';
+        markersFinal = h5read(dataPath,'/preds')';
         badFrames = h5read(dataPath,'/badFrames')';
     otherwise
         error('Unexpected file extension: %s', ext);
 end
 
-% Add nans for the portions of the markers that were incorrect 
-markers(logical(repelem(badFrames,1,3))) = nan;
-for i = 1:size(markers,2)
+% Add nans for the portions of the markers that were incorrect
+markersInitial(logical(repelem(badFrames,1,3))) = nan;
+for i = 1:size(markersInitial,2)
     % Nan values were previously assigned the mean for ease of imputation.
     % Reassign to nans, except for SpineM
     if i >= 13 || i <= 15
         continue;
     end
-    marker = markers(:,i);
+    marker = markersInitial(:,i);
     marker(marker == mode(marker)) = nan;
-    markers(:,i) = marker;
+    markersInitial(:,i) = marker;
 end
 
 % Smooth the predicitons
@@ -88,21 +88,32 @@ for i = 1:size(badFrames,2)
     for j = 1:numel(CC.PixelIdxList)
         frameIds = CC.PixelIdxList{j};
         frameIds = (frameIds(1) - padding):(frameIds(end) + padding);
-        frameIds = frameIds((frameIds > 0) & (frameIds < size(preds,1)));
-        preds(frameIds,markerIds) =...
-            smoothdata(preds(frameIds,markerIds),...
-                       'movmedian',smoothingWindow);
+        frameIds = frameIds((frameIds > 0) & (frameIds < size(markersFinal,1)));
+        markersFinal(frameIds,markerIds) =...
+            smoothdata(markersFinal(frameIds,markerIds),...
+            'movmedian',smoothingWindow);
     end
 end
-% preds = smoothdata(preds,'movmedian',smoothingWindow);
 
 % Get the remaining bad frames
-remainingBadFrames = getRemainingBadFrames(preds,badFrameThreshold,...
-                                           badFrameSurround);
+jerkBadFrames = applyJerkThreshold(markersFinal,...
+    badFrameThreshold, badFrameSurround);
+headBadFrames = applyHeadPdistThreshold(markersFinal);
+spineBadFrames = applySpineDistThreshold(markersFinal);
+
+% Set the remainingBadFrames to the union of metrics
+remainingBadFrames = ...
+    jerkBadFrames | headBadFrames | spineBadFrames;
+
+% Get the remaining bad frames
 remainingBadFrames(find(badFrames(:,4))) = true;
+
+% Set the head markers to nan for the headBadFrames, and
+% everything to nan for the spineBadFrames and jerkBadFrames
+mIds = 1:9;
+markersFinal(headBadFrames,mIds) = nan;
+markersFinal(jerkBadFrames | spineBadFrames,:) = nan;
 
 % Return
 imputedFrames = badFrames;
-markersFinal = preds;
-markersInitial = markers; 
 end

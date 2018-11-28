@@ -1,8 +1,8 @@
 #!/bin/bash
 # Specify paths and variables for imputation. Be sure all arrays have the same length.
-MODELPATH="/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM31_imputation_test/models/strideTest/model_ensemble/final_model.h5"
-DATAPATH="/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM31_imputation_test/JDM31_fullDay.h5"
-SAVEPATH="/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM31_imputation_test/predictions/strideTest_thresh_1"
+MODELPATH="/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM27/20171208/models/stride_5/model_ensemble/final_model.h5"
+DATAPATH="/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM27/20171208/JDM27_fullDay.h5"
+SAVEPATH="/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM27/20171208/predictions/thresh_5"
 STRIDE=5
 NFOLDS=20
 

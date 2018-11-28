@@ -1,12 +1,12 @@
 %% Look at OOB error 
-imputationPath = 'Y:\Diego\data\JDM25_caff_imputation_test\predictions\strideTest_thresh_5\fullDay_model_ensemble.h5';
+imputationPath = 'Y:\Diego\data\JDM31_imputation_test\predictions\strideTest_thresh_5\fullDay_model_ensemble.h5';
 nFrames = 100000;
 nMarkers = 60;
 nMembers = 10;
-% memberPredsF = h5read(imputationPath,'/member_predsF',[1 1 1],[nMarkers nFrames nMembers]);
-% memberPredsR = h5read(imputationPath,'/member_predsR',[1 1 1],[nMarkers nFrames nMembers]);
-memberPredsF = h5read(imputationPath,'/member_predsF');
-memberPredsR = h5read(imputationPath,'/member_predsR');
+memberPredsF = h5read(imputationPath,'/member_predsF',[1 1 1],[nMarkers nFrames nMembers]);
+memberPredsR = h5read(imputationPath,'/member_predsR',[1 1 1],[nMarkers nFrames nMembers]);
+% memberPredsF = h5read(imputationPath,'/member_predsF');
+% memberPredsR = h5read(imputationPath,'/member_predsR');
 skeletonPath = 'Y:\Diego\data\JDM25_caff_imputation_test\skeleton.mat';
 load(skeletonPath);
 %% Nan out the frames in which there was no imputation, and compute the std. 
@@ -26,7 +26,7 @@ mpfStd = nanstd(memberPredsF,[],3);
 mprStd = nanstd(memberPredsR,[],3);
 
 %% Look at the stds over time for the forward and reverse predictions
-close all
+% close all
 figure; hold on; 
 cLimVal = .1;
 subplot(1,2,1);
@@ -41,7 +41,7 @@ title(sprintf('Reverse std'));
 
 %% Look at the vector sum of both. 
 totStd = mpfStd+mprStd;
-close all
+% close all
 figure;
 cLimVal = .1;
 imagesc(totStd); 
@@ -108,7 +108,7 @@ legend(p([find(headIds,1),find(bodyIds,1),find(legIds,1),find(armIds,1)]),{'Head
 
 %% Aggregate the total STD into a video
 vid = reshape(totStd,60,1,[]);
-vid(vid > .5) = .5;
+vid(vid > .5) = .5;s
 
 %%
 % vplay(vid>=.25,{@(~,idx) set(h{1},'frame',idx)})
