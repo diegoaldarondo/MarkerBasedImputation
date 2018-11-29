@@ -67,6 +67,8 @@ end
 
 % Concatenate all data
 markers = cat(1, markers{:});
+marker_means = nanmean(markers,1);
+marker_stds = nanstd(markers,1);
 bad_frames = uint8(cat(1,bad_frames{:}));
 move_frames = uint8(cat(1,move_frames{:}));
 move_frames_fast = uint8(cat(1,move_frames_fast{:}));
@@ -82,9 +84,7 @@ bad_frames = new_bad_frames;
 %% Put in some values for the nans
 % (Otherwise the model will fail if nans aren't accounted for in
 %  badFrames, which happens in some datasets). These are taken out later.  
-markers(repelem(bad_frames(:),1,3)) = nan;
-marker_means = nanmean(markers,1);
-marker_stds = nanstd(markers,1);
+markers
 for i = 1:size(markers,2)
     markers(isnan(markers(:,i)),i) = marker_means(i);
 end

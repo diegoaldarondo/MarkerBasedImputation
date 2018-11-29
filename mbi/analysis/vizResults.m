@@ -1,5 +1,5 @@
 % Vizualize results
-%
+% Demonstrates how to use Animal class to view marker imputations
 % Diego Aldarondo
 %% Pathing
 addpath(genpath('C:\code\Olveczky\OlveczkyToolbox'))
@@ -8,10 +8,8 @@ addpath(genpath('C:/code/Olveczky/MarkerBasedImputation/mbi'))
 
 % imputationPath = 'Y:\Diego\data\JDM25_caff_imputation_test\predictions\diffThreshTest\fullDay_model_ensemble.h5';
 % imputationPath = 'Y:\Diego\data\JDM31_imputation_test\predictions\strideTest_thresh_5\fullDay_model_ensemble.h5';
-imputationPath = 'Y:\Diego\data\JDM25\20170916\predictions\thresh_5\fullDay_model_ensemble.h5';
-skeletonPath = 'Y:\Diego\data\skeleton.mat';
-load(skeletonPath);
-% 
+imputationPath = 'Y:\Diego\data\JDM33\20171124\predictions\thresh_5\fullDay_model_ensemble.h5';
+
 % embeddingPath = 'Y:\Diego\data\JDM25_caff_imputation_test\analysisstructs\analysisstruct.mat';
 % temp = load(embeddingPath,'zValues','condition_inds','frames_with_good_tracking');
 % embedFrames = round(temp.frames_with_good_tracking{2}/5);
@@ -19,7 +17,7 @@ load(skeletonPath);
 
 %% Construct the rat
 % rat = Animal('path',imputationPath,'skeleton',skeleton,'embed',embed,'embedFrames',embedFrames);
-rat = Animal('path',imputationPath,'skeleton',skeleton);
+rat = Animal('path',imputationPath);
 
 %% Postprocess
 rat.postProcess();

@@ -5,7 +5,7 @@ function reorganizeData(originalDirectory,imputationPath,copyOriginal)
 %the original information and imputed data reformatted to match the
 %original structure. 
 %
-% Syntax: reorganizeData(originalDirectory,imputationPath,copy_original);
+% Syntax: reorganizeData(originalDirectory,imputationPath,copyOriginal);
 % 
 % Inputs: originalDirectory - Path to directory containing original datasets.
 %         Path to imputation file. 
