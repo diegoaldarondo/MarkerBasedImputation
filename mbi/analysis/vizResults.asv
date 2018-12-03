@@ -1,5 +1,5 @@
 % Vizualize results
-%
+% Demonstrates how to use Animal class to view marker imputations
 % Diego Aldarondo
 %% Pathing
 addpath(genpath('C:\code\Olveczky\OlveczkyToolbox'))
@@ -8,25 +8,30 @@ addpath(genpath('C:/code/Olveczky/MarkerBasedImputation/mbi'))
 
 % imputationPath = 'Y:\Diego\data\JDM25_caff_imputation_test\predictions\diffThreshTest\fullDay_model_ensemble.h5';
 % imputationPath = 'Y:\Diego\data\JDM31_imputation_test\predictions\strideTest_thresh_5\fullDay_model_ensemble.h5';
-imputationPath = 'Y:\Diego\data\JDM27\20171208\predictions\thresh_5\fullDay_model_ensemble.h5';
-skeletonPath = 'Y:\Diego\data\skeleton.mat';
-load(skeletonPath);
-% 
-% embeddingPath = 'Y:\Diego\data\JDM25_caff_imputation_test\analysisstructs\analysisstruct.mat';
-% temp = load(embeddingPath,'zValues','condition_inds','frames_with_good_tracking');
-% embedFrames = round(temp.frames_with_good_tracking{2}/5);
-% embed = temp.zValues(temp.condition_inds==2,:);
+% imputationPath = 'Y:\Diego\data\JDM33\20171124\predictions\thresh_5\fullDay_model_ensemble.h5';
+% imputationPath = 'Y:\Diego\data\JDM27\20171207\predictions\fullDay_model_ensemble.h5';
+% imputationPath = 'Y:/Diego/data/JDM33/20171125/predictions/fullDay_model_ensemble.h5';
+imputationPath = 'Y:/Diego/data/JDM25/20170916/predictions/thresh_5/fullDay_model_ensemble.h5';
+
+datasetPath = 'Y:/Diego/data/JDM33/20171125/dataset.h5';
+embeddingPath = 'Y:\Diego\data\JDM25\20170916\analysisstructs\analysisstruct.mat';
+temp = load(embeddingPath,'zValues','condition_inds','frames_with_good_tracking');
+embedFrames = round(temp.frames_with_good_tracking{2}/5);
+embed = temp.zValues(temp.condition_inds==2,:);
 
 %% Construct the rat
-% rat = Animal('path',imputationPath,'skeleton',skeleton,'embed',embed,'embedFrames',embedFrames);
-rat = Animal('path',imputationPath,'skeleton',skeleton);
+rat = Animal('path',imputationPath,'embed',embed,'embedFrames',embedFrames);
+% rat = Animal('path',imputationPath);
 
 %% Postprocess
+% rat.postProcess(5,1,1);
 rat.postProcess();
 
 %% View trajectories of markers
 close all;
 frameIds = 100000:102500;
+skeleton = load('Y:/Diego/data/skeleton.mat');
+skeleton = skeleton.skeleton;
 markerIds = find(repelem(contains(skeleton.nodes,{'Arm','Elbow'}),3,1));
 rat.compareTraces(frameIds,markerIds);
 
@@ -37,6 +42,11 @@ figure;
 markersets = {'aligned','imputed'};
 % markersets = {'aligned','imputed','global'};
 h = rat.movie(markersets);
+
+%%
+cellfun(@(X) X.restrict(find(any(isnan(rat.imputedMarkers),2) & (movingFastFrames(1:5:end) & ~badSpines))),h);
+% % cellfun(@(X) X.restrict(find(jerkBadFrames & ~spineBadFrames)),h);
+% cellfun(@(X) X.restrict(find(jbf2 & ~spineBadFrames)),h);s
 
 %% Find frames moving above a certain velocity threshold
 velocity = nansum(diffpad(rat.imputedMarkers),2);
@@ -67,6 +77,9 @@ badHeads = (headDistance < headThresh(1)) | (headDistance > headThresh(2));
 cellfun(@(X) X.restrict(find(badHeads)),h);
 
 %% Write a movie
-frameIds = [98931:103931];
-savePath = 'C:\code\Olveczky\MotionAnalysis\viz\videos\fullDay_waveNet_thresh_5_.mp4';
-rat.writeMovie(markersets,frameIds,savePath,'FPS',60);
+temp = ~any(isnan(rat.imputedMarkers),2);
+startFrames = 77179;
+duration = 2500;
+frameIds = find(temp(startFrames:(startFrames+duration))) + startFrames;
+savePath = 'C:\code\Olveczky\MotionAnalysis\viz\videos\JDM25_20170916_fullDay_waveNet_thresh_5_unnanned_30fps_walking.mp4';
+rat.writeMovie(markersets,frameIds,savePath,'FPS',30);

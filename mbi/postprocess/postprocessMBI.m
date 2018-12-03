@@ -112,7 +112,16 @@ remainingBadFrames(find(badFrames(:,4))) = true;
 % everything to nan for the spineBadFrames and jerkBadFrames
 mIds = 1:9;
 markersFinal(headBadFrames,mIds) = nan;
-markersFinal(jerkBadFrames | spineBadFrames,:) = nan;
+mIds = 10:12;
+markersFinal(jerkBadFrames | spineBadFrames,mIds) = nan;
+
+velThresh = 23;
+for i = 1:(size(markersFinal,2)/3)
+    mIds = (i-1)*3 + (1:3);
+    vel = diffpad(markersFinal(:,mIds));
+    vel = sqrt(sum(vel.^2,2));
+    markersFinal(vel>velThresh,mIds) = nan;
+end
 
 % Return
 imputedFrames = badFrames;

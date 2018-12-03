@@ -81,6 +81,7 @@ figure;
 bar(sum(markers3d_jumps) - sum(preds3d_jumps));
 xlabel('Marker ID')
 ylabel('Difference between markers and preds')
+
 %% Make a confusion matrix for these jumps. 
 figure; 
 X = markers3d_jumps(:)';
@@ -159,6 +160,7 @@ for t = 1:numel(thresholds)
     F1 = 2*(precision.*recall)./(precision+recall);
     F1Scores(t,end) = 1-F1;
 end
+
 %% Plot corrected F1 as a function of jump threshold
 figure; hold on;
 c = [repelem(lines(2),4,1);zeros(1,3)];
@@ -195,8 +197,6 @@ end
 % 
 % markers_LR_arm_swap = markers(:,left_elbow_X) < markers(:,right_elbow_X);
 % preds_LR_arm_swap = preds(:,left_elbow_X) < preds(:,right_elbow_X);
-
-
 
 F1Scores = zeros(numel(thresholds),numel(markers_fixed));
 for v = 1:numel(thresholds)
@@ -242,7 +242,6 @@ plot(thresholds*stride, cumsum(numAdditionalFramesPerThresh)./sum(lengths.*strid
 xlabel('Cutoff Length')
 ylabel('Fraction of marker-frames imputed')
 set(gca,'XScale','log')
-
 
 % figure; hold on;
 % plot(thresholds*stride, numImputed,'LineWidth',3);

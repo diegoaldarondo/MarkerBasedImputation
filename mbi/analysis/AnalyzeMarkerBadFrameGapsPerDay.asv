@@ -1,11 +1,10 @@
 %% Analyze gaps and bad frames before and after MBI imputation.
-% Produces six figures:
+% Produces five figures:
 % 1. Fraction imputed frames per marker
 % 2. Fraction imputed moving frames per marker
 % 3. Fraction remaining bad frames per marker
 % 4. Fraction remaining bad moving frames per marker
 % 5. Before/After imputation comparison
-% 6. Before/After imputation comparison moving
 % Diego Aldarondo 12 3 18
 
 % Required toolboxes
@@ -219,41 +218,8 @@ xtickangle(45)
 title('Percentage of remaining bad moving frames');
 export_fig([exportPath 'remainingMovingFrames.png'])
 
-%% Compare the percentage of bad frames before and after. 
+%% Compare the percentage of bad frames while moving before and after. 
 figure(5); hold on; set(gcf,'color','w','pos',[488, 195, 688, 567]);
-totalImputationBadFrames = zeros(size(finalBadFrames));
-totalRemainingBadFrames = zeros(size(finalBadFrames));
-for i = 1:numel(finalBadFrames)
-    totalImputationBadFrames(i) = sum(any(imputedFrames{i},2))./size(imputedFrames{i},1);
-    totalRemainingBadFrames(i) = sum(any(finalBadFrames{i},2))./size(finalBadFrames{i},1);
-end
-markerMeans = [mean(pctBadFramesPre)' , mean(pctRemainingBadFrames)']*100;
-totals = mean([totalImputationBadFrames totalRemainingBadFrames]*100);
-markerSEM = [std(pctBadFramesPre)' , std(pctRemainingBadFrames)']*100./numel(imputedFrames);
-totalsSEM = mean([totalImputationBadFrames totalRemainingBadFrames]*100./numel(imputedFrames));
-X = [markerMeans; totals];
-SEM = [markerSEM; totalsSEM];
-b = bar(X);
-nbars=size(X,2);
-ngroups=size(X,1);
-groupwidth = min(0.8, nbars/(nbars + 1.5));
-for i = 1:nbars
-    % Calculate center of each bar
-    x = (1:ngroups) - groupwidth/2 + (2*i-1) * groupwidth / (2*nbars);
-    errorbar(x,X(:,i), SEM(:,i), 'k', 'linestyle', 'none');
-end
-ylabel('Average percentage of bad frames per rat');
-L = legend({'Pre imputation','Post Imputation'},'Position',[0.6133 0.8187 0.1956 0.0616]);
-labels = skeleton.nodes;
-labels{end+1} = 'Total';
-xticks(1:numel(labels))
-xticklabels(labels)
-xtickangle(45)
-title('Percentage of remaining bad frames');
-export_fig([exportPath 'beforeAndAfterAll.png'])
-
-%% Compare the percentage of bad frames while moving before and after.
-figure(6); hold on; set(gcf,'color','w','pos',[488, 195, 688, 567]);
 totalImputationBadFramesMoving = zeros(size(finalBadFrames));
 totalRemainingBadFramesMoving = zeros(size(finalBadFrames));
 for i = 1:numel(finalBadFrames)
@@ -284,4 +250,4 @@ xticks(1:numel(labels))
 xticklabels(labels)
 xtickangle(45)
 title('Percentage of remaining bad moving frames');
-export_fig([exportPath 'beforeAndAfterMoving.png'])
+export_fig([exportPath 'beforeAndAfter.png'])

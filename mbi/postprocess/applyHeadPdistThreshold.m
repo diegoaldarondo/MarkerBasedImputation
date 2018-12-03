@@ -34,7 +34,7 @@ if numvarargs > 2
     error('myfuns:somefun2Alt:TooManyInputs', ...
         'Accepts at most 2 optional inputs');
 end
-optargs = {75 100};
+optargs = {50 100};
 optargs(1:numvarargs) = varargin;
 [lowHeadThresh, highHeadThresh] = optargs{:};
 
