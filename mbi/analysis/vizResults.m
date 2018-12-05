@@ -15,10 +15,14 @@ imputationPath = 'Y:/Diego/data/JDM25/20170916/predictions/thresh_5/fullDay_mode
 
 datasetPath = 'Y:/Diego/data/JDM33/20171125/dataset.h5';
 embeddingPath = 'Y:\Diego\data\JDM25\20170916\analysisstructs\analysisstruct.mat';
-temp = load(embeddingPath,'zValues','condition_inds','frames_with_good_tracking');
-embedFrames = round(temp.frames_with_good_tracking{1}/5);
-embed = temp.zValues(temp.condition_inds==1,:);
 
+temp = load(embeddingPath,'zValues','condition_inds','frames_with_good_tracking');
+nEmbeds = numel(temp.frames_with_good_tracking);
+[embedFrames,embed] = deal(cell(nEmbeds,1));
+for i = 1:nEmbeds
+    embedFrames{i} = round(temp.frames_with_good_tracking{i}/5);
+    embed{i} = temp.zValues(temp.condition_inds==i,:); 
+end
 %% Construct the rat
 rat = Animal('path',imputationPath,'embed',embed,'embedFrames',embedFrames);
 % rat = Animal('path',imputationPath);
@@ -38,10 +42,10 @@ rat.compareTraces(frameIds,markerIds);
 %% View the rat and embedding simultaneously
 % close all;
 figure; 
-markersets = {'aligned','imputed','embed'};
+markersets = {'aligned','imputed','embed','embed'};
 % markersets = {'aligned','imputed'};
 % markersets = {'aligned','imputed','global'};
-h = rat.movie(markersets);
+h = rat.movie(markersets,[2 2]);
 
 %% restrict the frames in the movie to a subset of the whole. 
 cellfun(@(X) X.restrict(find(any(isnan(rat.imputedMarkers),2) & (movingFastFrames(1:5:end) & ~badSpines))),h);
