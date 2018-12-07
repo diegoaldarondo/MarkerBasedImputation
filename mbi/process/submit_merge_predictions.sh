@@ -15,6 +15,6 @@ FOLDPATHS=( "$@" )
 
 FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/merge.py"
 
-srun -l -n1 cluster/py.sh $FUNC $SAVEPATH ${FOLDPATHS[*]}
+srun -l -n1 process/py.sh $FUNC $SAVEPATH ${FOLDPATHS[*]}
 
 wait

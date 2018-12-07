@@ -75,10 +75,23 @@ end
 % Skeleton
 skeleton = load('Y:/Diego/data/skeleton.mat');
 skeleton = skeleton.skeleton;
-%%
+
+%% Find moving frames that are actually spine swaps
+movingFramesThatAreActuallySpineSwaps = cell(size(badSpines));
 for i = 1:numel(badSpines)
-    badSpines{i} = imdilate(badSpines{i},strel('square',30));
+    moving = movingFrames{i}(1:5:end);
+    dilated = imdilate(badSpines{i},strel('square',60));
+    CC = bwconncomp(dilated);
+    middleOfBadSpines = cellfun(@(X) round(median(X)), CC.PixelIdxList);
+    win = [-70:-60 60:70];
+    isMoving = false(size(middleOfBadSpines));
+    for j = 1:numel(CC.PixelIdxList)
+        isMoving(j) = nanmean(indpad(moving,win + middleOfBadSpines(j))) > .5;
+    end
+    movingFramesThatAreActuallySpineSwaps{i} = false(size(moving));
+    movingFramesThatAreActuallySpineSwaps{i}(cat(1,CC.PixelIdxList{~isMoving})) = true;
 end
+
 
 %% Compute imputation gap lengths
 lengths = cell(numel(datasetPaths),1);
@@ -126,7 +139,7 @@ end
 %% Look at the percentage imputed frames per marker for moving frames
 pctBadFramesPreMoving = zeros(numel(imputedFrames),size(imputedFrames{1},2));
 for iDay = 1:numel(imputedFrames)
-    moving = movingFrames{iDay}(1:5:end) & ~badSpines{iDay};
+    moving = movingFrames{iDay}(1:5:end) & ~movingFramesThatAreActuallySpineSwaps{iDay};
     nFrames = sum(moving);
     for jMarker = 1:size(imputedFrames{iDay},2)
         pctBadFramesPreMoving(iDay,jMarker) = sum(imputedFrames{iDay}(moving,jMarker))./nFrames;
@@ -148,7 +161,7 @@ end
 nMarkers = size(imputedFrames{1},2);
 pctRemainingBadFramesMoving = zeros(numel(finalBadFrames),nMarkers);
 for iDay = 1:numel(finalBadFrames)
-    moving = movingFrames{iDay}(1:5:end) & ~badSpines{iDay};
+    moving = movingFrames{iDay}(1:5:end) & ~movingFramesThatAreActuallySpineSwaps{iDay};
     nFrames = sum(moving);
     for jMarker = 1:nMarkers
         marker3dBadFrames = ...
@@ -261,7 +274,7 @@ figure(6); hold on; set(gcf,'color','w','pos',[488, 195, 688, 567]);
 totalImputationBadFramesMoving = zeros(size(finalBadFrames));
 totalRemainingBadFramesMoving = zeros(size(finalBadFrames));
 for i = 1:numel(finalBadFrames)
-    moving = movingFrames{i}(1:5:end) & ~badSpines{i};
+    moving = movingFrames{i}(1:5:end) & ~movingFramesThatAreActuallySpineSwaps{i};
     totalImputationBadFramesMoving(i) = sum(any(imputedFrames{i}(moving,:),2))./sum(moving);
     totalRemainingBadFramesMoving(i) = sum(any(finalBadFrames{i}(moving,:),2))./sum(moving);
 end
