@@ -11,6 +11,7 @@ setup(
         "h5py>=2.7.1",
         "matplotlib",
         "clize>=4.0.3",
-        "keras>=2.2.2"
+        "keras>=2.2.2",
+        "scikit-image"
     ]
 )

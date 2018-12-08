@@ -10,8 +10,8 @@ addpath(genpath('C:/code/Olveczky/MarkerBasedImputation/mbi'))
 % imputationPath = 'Y:\Diego\data\JDM31_imputation_test\predictions\strideTest_thresh_5\fullDay_model_ensemble.h5';
 % imputationPath = 'Y:\Diego\data\JDM33\20171124\predictions\thresh_5\fullDay_model_ensemble.h5';
 % imputationPath = 'Y:\Diego\data\JDM27\20171207\predictions\fullDay_model_ensemble.h5';
-imputationPath = 'Y:/Diego/data/JDM25/20170919/predictions/fullDay_model_ensemble.h5';
-% imputationPath = 'Y:/Diego/data/JDM25/20170916/predictions/thresh_5/fullDay_model_ensemble.h5';
+% imputationPath = 'Y:/Diego/data/JDM25/20170919/predictions/fullDay_model_ensemble.h5';
+imputationPath = 'Y:/Diego/data/JDM25/20170916/predictions/thresh_5/fullDay_model_ensemble.h5';
 
 % datasetPath = 'Y:/Diego/data/JDM33/20171125/dataset.h5';
 % embeddingPath = 'Y:\Diego\data\JDM25\20170916\analysisstructs\analysisstruct.mat';
@@ -36,8 +36,11 @@ close all;
 frameIds = 100000:102500;
 skeleton = load('Y:/Diego/data/skeleton.mat');
 skeleton = skeleton.skeleton;
-markerIds = find(repelem(contains(skeleton.nodes,{'Arm','Elbow'}),3,1));
-rat.compareTraces(frameIds,markerIds);
+% markerIds = find(repelem(contains(skeleton.nodes,{'Arm','Elbow'}),3,1));
+markerIds = false(numel(skeleton.nodes)*3,1);
+markerIds(1:3:end) = true;
+markerIds = find(markerIds);
+rat.compareTraces(frameIds,markerIds,150,150,0);
 
 %% View the rat and embedding simultaneously
 % close all;
