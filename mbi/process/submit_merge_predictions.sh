@@ -13,7 +13,7 @@
 SAVEPATH=$1; shift
 FOLDPATHS=( "$@" )
 
-FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/merge.py"
+FUNC="merge.py"
 
 srun -l -n1 process/py.sh $FUNC $SAVEPATH ${FOLDPATHS[*]}
 
