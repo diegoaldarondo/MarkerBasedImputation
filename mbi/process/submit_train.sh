@@ -17,5 +17,5 @@ srun -l -n1 echo $CUDA_VISIBLE_DEVICES
 FUNC="training.py"
 
 # Run training with parameters specified above.
-srun -l --gres=gpu:1 -n1 -N1 process/py.sh $FUNC $1 --base-output-path=$2 --epochs=$3 --stride=$4 &
+srun -l --gres=gpu:1 process/py.sh $FUNC $1 --base-output-path=$2 --epochs=$3 --stride=$4 &
 wait

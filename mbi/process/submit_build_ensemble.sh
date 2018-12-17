@@ -13,6 +13,6 @@
 FUNC="build_ensemble.py"
 SAVEPATH=$1; shift
 MODELS=( "$@" )
-srun -l --gres=gpu:1 -n1 process/py.sh $FUNC $SAVEPATH ${MODELS[*]} --run-name="model_ensemble"
+srun -l --gres=gpu:1 process/py.sh $FUNC $SAVEPATH ${MODELS[*]} --run-name="model_ensemble"
 
 wait

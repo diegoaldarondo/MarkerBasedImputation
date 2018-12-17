@@ -15,6 +15,6 @@ FOLDPATHS=( "$@" )
 
 FUNC="merge.py"
 
-srun -l -n1 process/py.sh $FUNC $SAVEPATH ${FOLDPATHS[*]}
+srun -l process/py.sh $FUNC $SAVEPATH ${FOLDPATHS[*]}
 
 wait

@@ -13,5 +13,5 @@ srun -l -n1 hostname
 srun -l -n1 echo $CUDA_VISIBLE_DEVICES
 
 PREDFUNC="predict_single_pass.py"
-srun -l --gres=gpu:1 -n1 process/py.sh $PREDFUNC $1 $2 $3 --save-path=$4 --stride=$5 --n-folds=$6 --fold-id=$SLURM_ARRAY_TASK_ID --error-diff-thresh=$7 &
+srun -l --gres=gpu:1 process/py.sh $PREDFUNC $1 $2 $3 --save-path=$4 --stride=$5 --n-folds=$6 --fold-id=$SLURM_ARRAY_TASK_ID --error-diff-thresh=$7 &
 wait
