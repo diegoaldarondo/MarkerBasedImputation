@@ -13,10 +13,7 @@ MBI was designed for the imputation of MoCap data in rats, but is suitable for g
 - [Algorithm summary](#Algorithm-summary)
 - [Step-by-step guide](#Step-by-step-guide)
     - [Building a dataset](#Building-a-dataset)
-    - [Training a model](#Training-a-model)
-    - [Building a model ensemble](#Building-a-model-ensemble)
-    - [Analyze model performance](#Analyze-model-performance)
-    - [Impute markers](#Impute-markers)
+    - [Imputation](#Imputation)
     - [Postprocessing](#Postprocessing)
 - [Authors](#Authors)
 
@@ -71,120 +68,40 @@ This guide will show each step required to impute data.
 <a name="Building-a-dataset"></a>
 ### Building a dataset
 
-The first step is to compile data in an easy format to pass between Matlab and python and use in keras. This will use the included genDataset.m. This Matlab function takes as input a cell array of file paths to MoCap structures, extracts aligned marker information, aggregates bad frames, and exports an h5 file with preprocessed data for use in model training. 
+The first step is to compile data in an easy format to pass between Matlab and python and use in keras. This will use the included genDataset.m. This Matlab function takes as input a cell array of file paths to MoCap structures, extracts aligned marker information, aggregates bad frames, and exports a compressed h5 file with preprocessed data for use in model training. 
 
 ```
 >> filePaths = {'pathToMoCapStruct1.mat','pathToMoCapStruct1.mat'};
->> savePath = 'myDataset.h5';
+>> savePath = 'myBasePath/myDataset.h5';
 >> genDataset(filePaths,savePath);
 ```
 
 [Back to top](#Top)
-<a name="Training-a-model"></a>
-### Training a model
+<a name="Imputation"></a>
+### Imputation
 
-Next, we need to train forcasting models to impute the position of markers in a frame given the preceeding frames. This will use training.py. Please look at the training.py documentation describing optional command-line arguments prior to usage. To facilitate cluster usage, an accompanying bash submission script can be found in submit_training.sh.
-
-Locally, or during interactive sessions:
+Using the included shell scripts, it is easy to use MBI with HPC resources. Just passing the path containing your dataset to the process.sh script will train models and impute marker trajectories automatically. This produces an imputation file which we will refer to as output.h5 containing the imputed marker trajectories. 
 
 ```
-$ python training.py --help
-$ python training.py "myDataset.h5" --base-output-path="myBaseModelPath"
+BASEOUTPUTPATH="myBasePath"
+nohup process/process.sh $BASEOUTPUTPATH > ""$BASEOUTPUTPATH"/process.out" &
 ```
 
-This will build a folder, myBaseModelPath, including the final model, best model, initial model, history, training parameters, optional weights at each training step, and folders for vizualizations. 
-
-On the cluster, first modify submit_training.sh with the appropriate parameters. 
-
-```
-$ nano submit_training.sh
-$ sbatch submit_training.sh
-```
-
-[Back to top](#Top)
-<a name="Building-a-model-ensemble"></a>
-### Building a model ensemble
-
-Next, we will create an ensemble of models to improve performance. The build_ensemble.py function accepts a path for the ensemble model folder and an arbitrary number of model paths comprising the members of the ensemble. 
-
-Locally, or during interactive sessions:
-
-```
-$ python build_ensemble.py --help
-$ python build_ensemble.py "myEnsembleModelBasePath" "model1.h5" "model2.h5" "model3.h5" 
-```
-
-On the cluster, first modify submit_build_ensemble.sh with the appropriate parameters. 
-
-```
-$ nano submit_build_ensemble.sh
-$ sbatch submit_build_ensemble.sh
-```
-
-[Back to top](#Top)
-<a name="Analyze-model-performance"></a>
-### Analyze model performance
-
-The function analyze_performance.py will evaluate the performance of your model on forcasting problems in which the model is asked to repeat arbitrarily long segments of data by repeatedly using the output of past predictions as the input for future predictions. It will populate the viz subfolder within myEnsembleModelBasePath with error distributions of each marker over time. 
-
-Locally, or during interactive sessions:
-
-```
-$ python analyze_performance.py --help
-$ python analyze_performance.py "myEnsembleModelBasePath" "myDataset.h5" --analyze-history=False
-```
-
-On the cluster, first modify submit_analyze_performance.sh with the appropriate parameters. 
-
-```
-$ nano submit_analyze_performance.sh
-$ sbatch submit_analyze_performance.sh
-```
-
-[Back to top](#Top)
-<a name="Impute-markers"></a>
-### Impute markers
-
-Finally, we can now impute markers in real data. The impute_markers.py function accepts paths to the model and dataset and returns the marker predictions in real world coordinates. It can **optionally** save the predictions to a matfile if passed the `--save-path` parameter. 
-
-Locally, or during interactive sessions:
-
-```
-$ python impute_markers.py --help
-$ python impute_markers.py "myEnsembleModel.h5" "myDataset.h5" --save-path="predictions.mat" --stride=5
-```
-
-On the cluster, first modify submit_impute_markers.sh with the appropriate parameters. 
-
-```
-$ nano submit_impute_markers.sh
-$ sbatch submit_impute_markers.sh
-```
-
-You can also separate the imputation into chunks to speed up prediction time with parallel processing. First modify the included `submit_batch_chunk_imputation.sh` and run the following commands. 
-
-```
-$ sbatch submit_batch_chunk_imputation.sh
-```
-
-and after it finishes:
-
-```
-sbatch submit_merge_chunks.sh
-```
+For advanced users, details for individual imputation steps in process.sh can be found in the wiki. 
 
 [Back to top](#Top)
 <a name="Postprocessing"></a>
 ### Postprocessing
 
-The postprocessing folder includes a number of Matlab functions that complete marker imputation. 
+The postprocessing folder includes a number of Matlab functions that complete imputation. 
 
 ```
->> dataPath = 'predictions.mat'
->> [markersFinal,markersInitial,remainingBadFrames] = postprocessMBI(dataPath);
+>> dataPath = 'output.h5'
+>> [markersFinal,markersInitial,imputedFrames,remainingBadFrames] = postprocessMBI(dataPath);
 ```
 
 [Back to top](#Top)
+
 <a name="Authors"></a>
 ## Authors
 
