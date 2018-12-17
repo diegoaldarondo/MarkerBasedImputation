@@ -28,6 +28,20 @@ nFramesOnlyInImp = sum(framesOnlyInImp);
 nFramesOnlyInOrig = sum(framesOnlyInOrig);
 uniqueFrames = {framesOnlyInOrig,framesOnlyInImp};
 
+%% Scatter embedding 
+figure(1); set(gcf,'color','w');
+mSize = 1;
+for i = 1:numel(embed)
+    scatter(embed{i}(:,1),embed{i}(:,2),mSize,'.')
+    hold on;
+end
+xlabel('T-sne 1')
+ylabel('T-sne 2')
+legend({'Unimputed','Imputed'})
+set(gcf,'color','w');
+set(gca,'Box','off');
+export_fig([exportPath 'tSneAllFrames.png'],'-r2000')
+
 %% Scatter embedding matched frames
 figure(1); set(gcf,'color','w');
 mSize = 1;
@@ -37,7 +51,10 @@ for i = 1:numel(embed)
 end
 xlabel('T-sne 1')
 ylabel('T-sne 2')
-export_fig([exportPath 'tSneSharedFrames.png'])
+legend({'Unimputed','Imputed'})
+set(gcf,'color','w');
+set(gca,'Box','off');
+export_fig([exportPath 'tSneSharedFrames.png'],'-r2000')
 
 %% Scatter embedding unmatched frames
 figure(2); hold on; 
@@ -46,8 +63,10 @@ for i = 1:numel(embed)
 end
 xlabel('T-sne 1')
 ylabel('T-sne 2')
+legend({'Unimputed','Imputed'})
 set(gcf,'color','w');
-export_fig([exportPath 'tSneUniqueFrames.png'])
+set(gca,'Box','off');
+export_fig([exportPath 'tSneUniqueFrames.png'],'-r2000')
 
 %% Bar graph number of frames added
 figure(3); 

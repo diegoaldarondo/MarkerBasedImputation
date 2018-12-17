@@ -26,8 +26,9 @@ def load_dataset(data_path):
     marker_means = np.array(f['marker_means'][:]).T
     marker_stds = np.array(f['marker_stds'][:]).T
     bad_frames = np.array(f['bad_frames'][:]).T
+    move_frames = np.array(f['move_frames'][:]).T
 
-    return markers, marker_means, marker_stds, bad_frames
+    return markers, marker_means, marker_stds, bad_frames, move_frames
 
 
 def get_ids(bad_frames, input_length, output_length, only_good_inputs=False,

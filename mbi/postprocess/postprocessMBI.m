@@ -50,7 +50,7 @@ if numvarargs > 3
     error('myfuns:somefun2Alt:TooManyInputs', ...
         'Accepts at most 3 optional inputs');
 end
-optargs = {5,1,150};
+optargs = {3,1,150};
 optargs(1:numvarargs) = varargin;
 [smoothingWindow,badFrameThreshold,badFrameSurround] = optargs{:};
 

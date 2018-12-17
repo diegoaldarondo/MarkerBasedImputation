@@ -5,7 +5,7 @@ exportPath = 'C:\code\Olveczky\MotionAnalysis\viz\LabMeeting12_10_18\SyntheticGa
 
 %% Pathing and loading data
 errorPath = 'Y:\Diego\data\JDM25_caff_imputation_test\models\strideTest\model_ensemble\viz\JDM25_analyze\errors.mat';
-errors = load(errorPath);
+errors = load(errorPath,'delta_markers');
 errors = errors.delta_markers;
 skeleton = load('Y:\Diego\data\skeleton.mat');
 skeleton = skeleton.skeleton;
@@ -32,3 +32,34 @@ c.Label.String = 'Median error (mm)';
 fontsize(16)
 set(gca,'Box','off')
 export_fig([exportPath 'medianErrorAtMidpoint.png']);
+
+%% Cumulative error
+markerIds = {contains(skeleton.nodes,'Head'),...
+             contains(skeleton.nodes,{'Arm','Elbow','Shoulder'}),...
+             contains(skeleton.nodes,{'SpineF','SpineL','Offset'}),...
+             contains(skeleton.nodes,{'Shin','Knee','Hip'}),...
+             ~contains(skeleton.nodes,'SpineM')};
+         
+thresholds = 0:.1:10;
+for iLength = 1:numel(errors)
+    pctBelowThresh = zeros(numel(markerIds),numel(thresholds));
+    for i = 1:numel(markerIds)
+        for j = 1:numel(thresholds)
+            markerErrors = errors{iLength}(:,round(end/2),markerIds{i});
+            pctBelowThresh(i,j) = sum(markerErrors(:) <= thresholds(j))./numel(markerErrors);
+        end
+    end
+    figure; hold on; 
+    plot(thresholds,pctBelowThresh','LineWidth',2)
+    ylabel('Fraction below threshold')
+    xlabel('Error threshold (mm)')
+    legend({'Head','Forelimbs','Body','Hindlimbs','Total'},...
+        'Position', [0.6477    0.3517    0.2418    0.3000])
+    title(sprintf('Gap length: %d frames',size(errors{iLength},2)))
+    fontsize(16)
+    set(gca,'Box','off')
+    set(gcf,'color','w')
+    fn = sprintf('cumulativeErrorDistribution%d.png',size(errors{iLength},2));
+    export_fig([exportPath fn],'-r1500');
+end
+

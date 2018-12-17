@@ -1,4 +1,4 @@
-function reorganizeData(originalDirectory,imputationPath,copyOriginal)
+function reorganizeData(mocapPaths,imputationPath,copyOriginal)
 %reorganizeData - Reorganize data files to fit Jesse's file structure.
 %Finds the .mat files comprising the imputation, postprocesses the
 %imputation data, and for each .mat file, saves a new v7.3 matfile containing
@@ -27,18 +27,8 @@ function reorganizeData(originalDirectory,imputationPath,copyOriginal)
 % Author: Diego Aldarondo
 % Work address
 % email: diegoaldarondo@g.harvard.edu
-% November 2018; Last revision: 12-November-2018
+% November 2018; Last revision: 13-December-2018
 %------------- BEGIN CODE --------------
-%% Get the original dataset paths
-d = dir([originalDirectory '\*nolj.mat']);
-out = regexp(cell2mat(regexp([d.name],'[0-9]*_nolj.mat','match')),...
-             '[0-9]*','match');
-id = zeros(size(out));
-for i = 1:numel(out)
-    id(i) = str2num(out{i});
-end
-[~,B] = sort(id);
-mocap_paths = fullfile({d(B).folder},{d(B).name});
 
 %% Get postprocessing data
 fprintf('Postprocessing data\n')
@@ -47,27 +37,42 @@ fprintf('Postprocessing data\n')
 %% Put the appropriate chunk in the correct file. 
 totalFramesRead = 1;
 stride = 5;
-for i = 1:numel(mocap_paths)
-    fprintf('Reformatting %s\n',mocap_paths{i})
-    mocap = load(mocap_paths{i});
+for i = 1:numel(mocapPaths)
+    % Get the size of the corresponding file. 
+    fprintf('Reformatting %s\n',mocapPaths{i})
+    mocap = load(mocapPaths{i});
+    [nFrames, nMarkers] = size(struct2array(mocap.markers_preproc));
     
-    [numFrames, numMarkers] = size(struct2array(mocap.markers_preproc));
-    imputed_markers = markersFinal(totalFramesRead:(totalFramesRead + round((numFrames/stride))-1),:);
-    imputed_frames = imputedFrames(totalFramesRead:(totalFramesRead + round((numFrames/stride))-1),:);
-    remaining_bad_frames = remainingBadFrames(totalFramesRead:(totalFramesRead + (numFrames/stride)-1));
+    % Get the corresponding frames from the imputed dataset. 
+    imputed_markers = markersFinal(totalFramesRead:(totalFramesRead + round((nFrames/stride))-1),:);
+    imputed_frames = imputedFrames(totalFramesRead:(totalFramesRead + round((nFrames/stride))-1),:);
+    remaining_bad_frames = remainingBadFrames(totalFramesRead:(totalFramesRead + (nFrames/stride)-1));
     
+    % Initialize
     upsampled_imputed_frames = cell(size(imputed_frames,2));
     upsampled_imputed_markers = cell(size(imputed_frames,2));
     
-    % Upsample...
-    for j = 1:numMarkers
-        upsampled_imputed_markers{j} = interp(imputed_markers(:,j),stride);
+    % Upsample imputed markers using cubic interpolation
+    for j = 1:nMarkers
+        nDsFrames = numel(imputed_markers(:,j));
+        samples = 1:nDsFrames;
+        newSamples = linspace(1,nDsFrames,nFrames);
+        upsampled_imputed_markers{j} = ...
+            interp1(samples, imputed_markers(:,j), newSamples, 'pchip');
+        % Linear interpolation
+	    % upsampled_imputed_markers{j} = interp(imputed_markers(:,j),stride);
     end
+    
+    % Upsample the imputed frames. 
     for j = 1:size(imputed_frames,2)
         upsampled_imputed_frames{j} = repelem(imputed_frames(:,j),stride,1);
     end
     imputed_markers = cat(2,upsampled_imputed_markers{:});
     imputed_frames = cat(2,upsampled_imputed_frames{:});
+    
+    % Put back in the original markers that were not imputed. 
+    markers = mocap.aligned_markers;
+    imputed_markers(~logical(imputed_frames)) = markers(~logical(imputed_frames));
     
     % Copy the markernames in case user does not want to copy the original
     % and clear the mocap struct if that is the case. 
@@ -87,7 +92,7 @@ for i = 1:numel(mocap_paths)
     end
     
     % Save out 
-    savePath = [mocap_paths{i}(1:end-4)  '_imputed.mat'];
+    savePath = [mocapPaths{i}(1:end-4)  '_imputed.mat'];
     save(savePath,'-struct','mocap','-v7.3');
-    totalFramesRead = totalFramesRead + round(numFrames/stride);
+    totalFramesRead = totalFramesRead + round(nFrames/stride);
 end

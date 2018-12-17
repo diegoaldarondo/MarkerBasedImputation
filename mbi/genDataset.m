@@ -103,7 +103,7 @@ bad_frames = new_bad_frames;
 
 %% Put in some values for the nans
 % (Otherwise the model will fail if nans aren't accounted for in
-%  badFrames, which happens in some datasets). These are taken out later.  
+% badFrames, which happens in some datasets). These are taken out later.  
 markers(logical(repelem(bad_frames(:),1,3))) = nan;
 marker_means = nanmean(markers,1);
 marker_stds = nanstd(markers,1);
@@ -112,17 +112,17 @@ for i = 1:size(markers,2)
 end
 
 %% Normalize the values across time.
-% markers = zscore(markers,1)
 markers = (markers-marker_means)./marker_stds;
 markers(isnan(markers)) = 0;
 
-%% Save the data to an h5 file
-% Despite being deprecated, hdf5write supports writing cell arrays of strings 
-% to h5 files. Be sure to use BEFORE saving other datasets.  
-% hdf5write(savePath,'mocapPaths',mocapPaths)
+%% Save the files used to a mat file within the base directory
+fn = fileparts(savePath);
+save(fullfile(fn,'mocapPaths.mat'),'mocapPaths');
 
-h5save(savePath,markers,'markers')
-h5save(savePath,bad_frames,'bad_frames')
+%% Save the data to an h5 file
+compressionLevel = 9; % GZIP compression 0-9: 9 is max
+h5save(savePath,markers,'markers','ChunkSize',[1000 60],'Deflate',compressionLevel)
+h5save(savePath,bad_frames,'bad_frames','ChunkSize',[1000 20],'Deflate',compressionLevel)
 h5save(savePath,marker_means,'marker_means')
 h5save(savePath,marker_stds,'marker_stds')
 h5save(savePath,move_frames,'move_frames')

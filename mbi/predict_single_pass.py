@@ -1,5 +1,5 @@
 """Imputes markers with mbi models."""
-import clize
+# import clize
 import h5py
 from keras.models import load_model
 import numpy as np
@@ -235,8 +235,10 @@ def predict_single_pass(model_path, data_path, pass_direction, *,
     if markers_to_fix is None:
         markers_to_fix = np.zeros((markers.shape[1])) > 1
         # TODO(Skeleton): Automate this by including the skeleton.
-        markers_to_fix[30:36] = True
-        markers_to_fix[42:] = True
+        # Fix all arms, elbows, shoulders, shins, hips and legs.
+        markers_to_fix[30:] = True
+        # markers_to_fix[30:36] = True
+        # markers_to_fix[42:] = True
 
     if pass_direction == 'reverse':
         markers = markers[::-1, :]

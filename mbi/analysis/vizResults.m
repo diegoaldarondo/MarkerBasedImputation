@@ -12,43 +12,46 @@ addpath(genpath('C:/code/Olveczky/MarkerBasedImputation/mbi'))
 % imputationPath = 'Y:\Diego\data\JDM27\20171207\predictions\fullDay_model_ensemble.h5';
 % imputationPath = 'Y:/Diego/data/JDM25/20170919/predictions/fullDay_model_ensemble.h5';
 imputationPath = 'Y:/Diego/data/JDM25/20170916/predictions/thresh_5/fullDay_model_ensemble.h5';
-
+% imputationPath = 'Y:\Diego\data\JDM25\20170916\spineTest\predictions\fullDay_model_ensemble.h5';
 % datasetPath = 'Y:/Diego/data/JDM33/20171125/dataset.h5';
-% embeddingPath = 'Y:\Diego\data\JDM25\20170916\analysisstructs\analysisstruct.mat';
-% 
-% temp = load(embeddingPath,'zValues','condition_inds','frames_with_good_tracking');
-% nEmbeds = numel(temp.frames_with_good_tracking);
-% [embedFrames,embed] = deal(cell(nEmbeds,1));
-% for i = 1:nEmbeds
-%     embedFrames{i} = round(temp.frames_with_good_tracking{i}/5);
-%     embed{i} = temp.zValues(temp.condition_inds==i,:); 
-% end
+embeddingPath = 'Y:\Diego\data\JDM25\20170916\analysisstructs\analysisstruct.mat';
+
+temp = load(embeddingPath,'zValues','condition_inds','frames_with_good_tracking');
+nEmbeds = numel(temp.frames_with_good_tracking);
+[embedFrames,embed] = deal(cell(nEmbeds,1));
+for i = 1:nEmbeds
+    embedFrames{i} = round(temp.frames_with_good_tracking{i}/5);
+    embed{i} = temp.zValues(temp.condition_inds==i,:); 
+end
+
 %% Construct the rat
 % rat = Animal('path',imputationPath,'embed',embed,'embedFrames',embedFrames);
 rat = Animal('path',imputationPath);
 
-%% Postprocess
-% rat.postProcess(5,1,1);
+% Postprocess
 rat.postProcess();
 
 %% View trajectories of markers
 close all;
-frameIds = 100000:102500;
+frameIds = 111755:112755;
 skeleton = load('Y:/Diego/data/skeleton.mat');
 skeleton = skeleton.skeleton;
-% markerIds = find(repelem(contains(skeleton.nodes,{'Arm','Elbow'}),3,1));
-markerIds = false(numel(skeleton.nodes)*3,1);
-markerIds(1:3:end) = true;
+markerIds = repelem(contains(skeleton.nodes,{'ArmR','ElbowR','HeadL','ShinR','SpineF'}),3,1);
 markerIds = find(markerIds);
-rat.compareTraces(frameIds,markerIds,150,150,0);
+markerIds = markerIds(1:3:end);
+
+% markerIds = false(numel(skeleton.nodes)*3,1);
+% markerIds(1:3:end) = true;
+% markerIds = find(markerIds);
+rat.compareTraces(frameIds,markerIds);
 
 %% View the rat and embedding simultaneously
 % close all;
-figure; 
-markersets = {'aligned','imputed'};
+figure;
+markersets = {'aligned','imputed','embed','embed'};
 % markersets = {'aligned','imputed'};
 % markersets = {'aligned','imputed','global'};
-h = rat.movie(markersets,[1 2]);
+h = rat.movie(markersets,[1 4]);
 
 %% restrict the frames in the movie to a subset of the whole. 
 cellfun(@(X) X.restrict(find(any(isnan(rat.imputedMarkers),2) & (movingFastFrames(1:5:end) & ~badSpines))),h);
