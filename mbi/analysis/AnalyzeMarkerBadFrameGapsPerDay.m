@@ -33,7 +33,7 @@ datasetPaths = {'Y:/Diego/data/JDM25/20170916/JDM25_fullDay.h5',...
          'Y:/Diego/data/JDM31_imputation_test/JDM31_fullDay.h5',...
          'Y:\Diego\data\JDM32\20171023\JDM32_fullDay.h5',...
          'Y:\Diego\data\JDM32\20171024\dataset.h5',...
-         'Y:\Diego\data\JDM33\20171124\JDM33_fullDay.h5',...
+         'Y:\Diego\data\JDM33\20171124\dataset.h5',...
          'Y:\Diego\data\JDM33\20171125\dataset.h5'};
 names = {'JDM25','JDM25','JDM27','JDM27','JDM31','JDM32','JDM32','JDM33','JDM33'};
 
@@ -186,7 +186,7 @@ xticks(1:size(imputedFrames{1},2))
 xticklabels(skeleton.nodes)
 xtickangle(45)
 title('Fraction imputed frames');
-% export_fig([exportPath 'imputedFramesAllFrames.png'])
+% % export_fig([exportPath 'imputedFramesAllFrames.png'])
 
 %% Plot percentage imputed frames per marker for moving frames. 
 figure(2); hold on; set(gcf,'color','w');
@@ -202,7 +202,7 @@ xticks(1:size(BF{1},2))
 xticklabels(skeleton.nodes)
 xtickangle(45)
 title('Fraction imputed moving frames');
-% export_fig([exportPath 'imputedFramesMovingFrames.png'])
+% % export_fig([exportPath 'imputedFramesMovingFrames.png'])
 
 %% Plot percentage remainingBadFrames per marker for all frames. 
 figure(3); hold on; set(gcf,'color','w');
@@ -218,7 +218,7 @@ xticks(1:size(imputedFrames{1},2))
 xticklabels(skeleton.nodes)
 xtickangle(45)
 title('Percentage of remaining bad frames');
-% export_fig([exportPath 'remainingBadFrames.png'])
+% % export_fig([exportPath 'remainingBadFrames.png'])
 
 %% Plot percentage remainingBadFrames per marker for moving frames. 
 figure(4); hold on; set(gcf,'color','w');
@@ -234,7 +234,7 @@ xticks(1:size(imputedFrames{1},2))
 xticklabels(skeleton.nodes)
 xtickangle(45)
 title('Percentage of remaining bad moving frames');
-% export_fig([exportPath 'remainingMovingFrames.png'])
+% % export_fig([exportPath 'remainingMovingFrames.png'])
 
 %% Compare the percentage of bad frames before and after. 
 figure(5); hold on; set(gcf,'color','w','pos',[488, 195, 688, 567]);
@@ -267,7 +267,7 @@ xticks(1:numel(labels))
 xticklabels(labels)
 xtickangle(45)
 title('Percentage of remaining bad frames');
-% export_fig([exportPath 'beforeAndAfterAll.png'])
+% % export_fig([exportPath 'beforeAndAfterAll.png'])
 
 %% Compare the percentage of bad frames while moving before and after.
 figure(6); hold on; set(gcf,'color','w','pos',[488, 195, 688, 567]);
@@ -301,4 +301,4 @@ xticks(1:numel(labels))
 xticklabels(labels)
 xtickangle(45)
 title('Percentage of remaining bad moving frames');
-% export_fig([exportPath 'beforeAndAfterMoving.png'])
+% % export_fig([exportPath 'beforeAndAfterMoving.png'])

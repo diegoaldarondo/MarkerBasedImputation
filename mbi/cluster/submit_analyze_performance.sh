@@ -11,18 +11,18 @@
 #SBATCH -e logs/Job.analyzePerformance.%N.%j.err    # STDERR
 
 # Specify paths and variables for analysis. Be sure all arrays have the same length.
-FUNC="/n/holylfs02/LABS/olveczky_lab/Diego/code/MarkerBasedImputation/mbi/analyze_performance.py"
+FUNC="analyze_performance.py"
 MODELBASEPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/models/strideTest/model_ensemble")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM33/20171125/models/model_ensemble")
 DATAPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25_caff_imputation_test/JDM25_fullDay.h5")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM33/20171125/dataset.h5")
 RUNNAME=(\
-"JDM25_analyze")
+"analyze")
 # Run analysis with parameters specified above.
 count=0
 while [ "x${MODELBASEPATH[count]}" != "x" ]
 do
-   srun -l --gres=gpu:1 -n1  cluster/py.sh $FUNC ${MODELBASEPATH[count]} ${DATAPATH[count]} --analyze-history=False --model-name="final_model.h5" --run-name=${RUNNAME[count]} --stride=5 --skip=500 &
+   srun -l --gres=gpu:1 -n1 cluster/py.sh $FUNC ${MODELBASEPATH[count]} ${DATAPATH[count]} --analyze-history=False --model-name="final_model.h5" --run-name=${RUNNAME[count]} --stride=5 --skip=300 &
    count=$(( $count + 1 ))
 done
 wait

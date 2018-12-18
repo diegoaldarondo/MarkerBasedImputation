@@ -323,7 +323,8 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
     model = load_model(os.path.join(model_base_path, model_name))
 
     print('Loading data')
-    markers, marker_means, marker_stds, bad_frames = load_dataset(data_path)
+    markers, marker_means, marker_stds, bad_frames, moving_frames = \
+        load_dataset(data_path)
     markers = markers[::stride, :]
     bad_frames = bad_frames[::stride, :]
 

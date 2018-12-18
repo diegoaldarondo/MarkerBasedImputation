@@ -2,6 +2,7 @@
 % Creates figures:
 % 1. Median error at midpoint. 
 exportPath = 'C:\code\Olveczky\MotionAnalysis\viz\LabMeeting12_10_18\SyntheticGaps\';
+addpath(genpath('C:/code/talmos-toolbox'))
 
 %% Pathing and loading data
 errorPath = 'Y:\Diego\data\JDM25_caff_imputation_test\models\strideTest\model_ensemble\viz\JDM25_analyze\errors.mat';
@@ -31,7 +32,7 @@ c = colorbar;
 c.Label.String = 'Median error (mm)';
 fontsize(16)
 set(gca,'Box','off')
-export_fig([exportPath 'medianErrorAtMidpoint.png']);
+% export_fig([exportPath 'medianErrorAtMidpoint.png']);
 
 %% Cumulative error
 markerIds = {contains(skeleton.nodes,'Head'),...
@@ -60,6 +61,6 @@ for iLength = 1:numel(errors)
     set(gca,'Box','off')
     set(gcf,'color','w')
     fn = sprintf('cumulativeErrorDistribution%d.png',size(errors{iLength},2));
-    export_fig([exportPath fn],'-r1500');
+    % export_fig([exportPath fn],'-r1500');
 end
 
