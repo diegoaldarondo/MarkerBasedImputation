@@ -1,22 +1,22 @@
 classdef EmbeddingAnimator < Animator
-   %embedMovie - interactive movie of movement through behavioral
-   %embedding. Subclass of Animator.
-   %
-   %Syntax: EmbeddingAnimator('embed',embed,'embedFrames',...
-   %                    embedFrames,'nFrames',nFrames)
-   %
-   %EmbeddingAnimator Properties:
-   %    embed - embedded points (replicated so size matches nFrames); 
-   %    embedFrames - corresponding movie Frames (replicated)
-   %    scatterFig - handle to the background scatter plot
-   %    currentPoint - handle to the current point
-   %    animal - handle to the calling Animal object to sync with
-   %             MarkerMovies. 
-   %
-   %EmbeddingAnimator Methods:
-   %EmbeddingAnimator - constructor
-   %restrict - restrict animation to subset of frames
-   %keyPressCalback - handle UI
+    %embedMovie - interactive movie of movement through behavioral
+    %embedding. Subclass of Animator.
+    %
+    %Syntax: EmbeddingAnimator('embed',embed,'embedFrames',...
+    %                    embedFrames,'nFrames',nFrames)
+    %
+    %EmbeddingAnimator Properties:
+    %    embed - embedded points (replicated so size matches nFrames);
+    %    embedFrames - corresponding movie Frames (replicated)
+    %    scatterFig - handle to the background scatter plot
+    %    currentPoint - handle to the current point
+    %    animal - handle to the calling Animal object to sync with
+    %             MarkerMovies.
+    %
+    %EmbeddingAnimator Methods:
+    %EmbeddingAnimator - constructor
+    %restrict - restrict animation to subset of frames
+    %keyPressCalback - handle UI
     properties (Access = private)
         instructions = ['EmbeddingAnimator Guide:\n' ...
             'rightarrow: next frame\n' ...
@@ -64,7 +64,7 @@ classdef EmbeddingAnimator < Animator
             end
             
             % Get a vector, frameInds, of length nFrames where frameInds(i)
-            % is the value in embedFrames closest to i. 
+            % is the value in embedFrames closest to i.
             [obj.frameInds, I] = deal(zeros(obj.nFrames,1));
             count = 1;
             for i = 1:numel(obj.frameInds)
@@ -78,14 +78,14 @@ classdef EmbeddingAnimator < Animator
                 end
                 I(i) = count;
             end
-
+            
             % Create the backgound scatter
             c = lines(2);
             obj.scatterFig = scatter(obj.Axes,obj.embed(:,1),...
                 obj.embed(:,2),2,c(1,:),'.');
             
             % Expand to fit the number of actual frames. This makes
-            % indexing a whole lot easier later. 
+            % indexing a whole lot easier later.
             obj.embedX = obj.embed(I,1);
             obj.embedY = obj.embed(I,2);
             obj.embed = obj.embed(I,:);
@@ -95,7 +95,7 @@ classdef EmbeddingAnimator < Animator
             obj.currentPoint = scatter(obj.Axes,obj.embedX(1),...
                 obj.embedY(1),500,c(2,:),'.');
             set(obj.Axes,'Units','normalized',...
-                'Position',obj.AxesPosition); 
+                'Position',obj.AxesPosition);
         end
         
         function restrict(obj, newFrames)
@@ -106,21 +106,28 @@ classdef EmbeddingAnimator < Animator
         end
         
         function keyPressCallback(obj,source,eventdata)
-              % determine the key that was pressed
-              keyPressCallback@Animator(obj,source,eventdata);
-              keyPressed = eventdata.Key;
-              switch keyPressed
-                  case 'h'
-                      fprintf(obj.instructions);
-                  case 's'
-                      fprintf(obj.statusMsg,...
-                          obj.frameInds(obj.frame),obj.frameRate);
-                  case 'i'
-                      inputPoly(obj);
-                  case 'r'
-                      reset(obj);
-              end
-              update(obj);
+            % determine the key that was pressed
+            keyPressCallback@Animator(obj,source,eventdata);
+            keyPressed = eventdata.Key;
+            switch keyPressed
+                case 'h'
+                    fprintf(obj.instructions);
+                case 's'
+                    fprintf(obj.statusMsg,...
+                        obj.frameInds(obj.frame),obj.frameRate);
+                case 'i'
+                    inputPoly(obj);
+                case 'r'
+                    reset(obj);
+                case 'b'
+                    if obj.scope == obj.id
+                        obj.animal.bradyMovie(repmat({'imputed'},16,1),[4 4]);
+                        % obj.animal.bradyMovie(repmat({'imputed'},16,1),[4 4],true);
+                        % obj.animal.bradyMovie(repmat({'imputed'},9,1),[3 3]);
+                    end
+                    pause(1)
+            end
+            update(obj);
         end
     end
     
@@ -173,10 +180,10 @@ classdef EmbeddingAnimator < Animator
                 else
                     restrict(obj,framesInPoly);
                 end
-
+                
             end
         end
-      
+        
     end
     
     methods (Access = protected)

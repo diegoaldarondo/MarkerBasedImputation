@@ -418,36 +418,66 @@ classdef Animal < matlab.mixin.SetGet
         end
         
         function h = bradyMovie(obj,markerset,tiles,varargin)
-            %movie - view interactive animations
+            %bradyMovie - view interactive animations in a Brady Bunch
+            %style
             %
-            %   Syntax: Animal.movie(markerset);
-            %
-            %   Inputs: markerset - can be 'aligned','imputed','global',
-            %           'embed', or a cell array of these four options.
-            %           varargin - arguments to MarkerMovie constructor.
-            %
-            %   Notes: Markersets will appear side by side in the order
-            %   given with appropriate titles above. movie supports any
-            %   number of markersets.
+            %   Syntax: Animal.bradyMovie(markerset,tiles);
+            %           Animal.bradyMovie(markerset,tiles,plotSimple);
+            %   
+            %   Inputs: markerset - cell array of 'aligned' or 'imputed'
+            %           tiles - shape of brady grid. e.g. [5,5]
+            %   
+            %   Optional Inputs: plotSimple - if true, plots everything in
+            %                    white to speed up graphics. Colored 
+            %                    according to animal skeleton otherwise
+            
+            % Check to see if simple plotting 
+            if ~isempty(varargin)
+                plotSimple = varargin{1};
+            else
+                plotSimple = false;
+            end
+            
+            % Check to make sure markerset is in the right format
             if isstring(markerset) || ischar(markerset)
                 markerset = {markerset};
             end
+            
+            % Get the indices based on the restricted frames of the
+            % associated MarkerAnimatior
             frameInds = obj.h{1}.getFrameInds;
             bradyInds = false(max(frameInds),1);
             bradyInds(frameInds) = true;
             CC = bwconncomp(bradyInds);
             bradyInds = cellfun(@(X) X(1:100),CC.PixelIdxList,'uni',0);
-            % For each element in markerset, plot the appropriate chart
-            nAnimations = numel(markerset);
+
+            % For each element in markerset, plot the chart in the
+            % appropriate place
+            nAnimations = min([numel(markerset) numel(bradyInds)]);
             [x,positions,h,titles] = deal(cell(nAnimations,1));
-            isMM = contains(markerset,{'aligned','imputed','global'});
             if isempty(tiles)
                 positions = Animal.linearPositions(nAnimations);
             elseif (numel(tiles) == 2) && isnumeric(tiles)
                 positions = Animal.tilePositions(tiles(1),tiles(2));
             end
             
-            figure; 
+            % Randomly select the bouts to use.
+            if nAnimations > numel(bradyInds)
+                boutId = randperm(numel(bradyInds),numel(bradyInds));
+            else
+                boutId = randperm(numel(bradyInds),nAnimations);
+            end
+            
+            % Find all of the MarkerAnimators associated with the animal
+            isMA = contains(markerset,{'aligned','imputed','global'});
+            isMA = isMA(1:numel(boutId));
+            
+            
+            
+            
+            
+            % Build a MarkerAnimator for each chunk. 
+            figure('pos',[3, 237, 717, 551]); 
             for i = 1:nAnimations   
                 if i > numel(bradyInds)
                    break; 
@@ -455,24 +485,32 @@ classdef Animal < matlab.mixin.SetGet
                 % Handle each type of chart appropriately
                 switch markerset{i}
                     case 'aligned'
-                        x{i} = obj.alignedMarkers(bradyInds{i},:);
+                        x{i} = obj.alignedMarkers(bradyInds{boutId(i)},:);
                         titles{i} = 'Aligned unimputed';
                     case 'imputed'
-                        x{i} = obj.imputedMarkers(bradyInds{i},:);
+                        x{i} = obj.imputedMarkers(bradyInds{boutId(i)},:);
                         titles{i} = 'Aligned imputed';
                     case 'global'
-                        x{i} = obj.markers(bradyInds{i},:);
+                        x{i} = obj.markers(bradyInds{boutId(i)},:);
                         titles{i} = 'Global';
                     otherwise
                         error(['Improper markerset. Must be aligned, ' ...
                             'imputed, or global.']);
                 end              
-                if isMM(i)
+                if isMA(i)
+                    if plotSimple
+                       skel = obj.skeleton;
+                       cVals = ones(size(obj.skeleton.segments.color,1),3);
+                       skel.segments.color = mat2cell(cVals,ones(size(cVals,1),1));
+                    else
+                       skel = obj.skeleton;
+                    end
+                    
                     h{i} = MarkerAnimator('markers',x{i},...
-                        'skeleton',obj.skeleton,...
+                        'skeleton',skel,...
+                        'frameRate',3,...
                         'AxesPosition',positions{i},...
-                        'id', i,...
-                        varargin{:});
+                        'id',i);
                 end
             end
             
@@ -482,7 +520,7 @@ classdef Animal < matlab.mixin.SetGet
                 @(src,event) Animator.runAll(h,src,event));
 
             % Link the axes of the MarkerAnimator objects
-            obj.hlinkBrady = linkprop(h{1}.Parent.Children(isMM(end:-1:1)),...
+            obj.hlinkBrady = linkprop(h{1}.Parent.Children(isMA(end:-1:1)),...
                 {'CameraPosition','CameraUpVector'});
             
             % Set axis colors and turn of axes
@@ -492,6 +530,7 @@ classdef Animal < matlab.mixin.SetGet
             end
             obj.hBrady = h;
         end
+
         
         function V = writeMovie(obj,markerset,frameIds,savePath,varargin)
             %writeMovie - write a MarkerMovie

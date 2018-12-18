@@ -79,92 +79,48 @@ classdef MarkerAnimator < Animator
             obj.color = obj.skeleton.segments.color;
             obj.joints = cat(1,obj.skeleton.segments.joints_idx{:});
             
-            % Initialize the markers
-%             curX = obj.markersX(obj.frame,:);
-%             curY = obj.markersY(obj.frame,:);
-%             curZ = obj.markersZ(obj.frame,:);
-%             
-%             curX = curX(obj.joints)';
-%             curY = curY(obj.joints)';
-%             curZ = curZ(obj.joints)';
+            % get color groups
+            c = cell2mat(obj.color);
+            [colors,~,cIds] = unique(c,'rows');
+            [~, MaxNNodes] = mode(cIds);
             
-            % Method 1, slow but nice markers
-%             obj.PlotSegments = plot3(obj.Axes, curX(obj.joints)',...
-%                 curY(obj.joints)',...
-%                 curZ(obj.joints)',...
-%                 '.-','MarkerSize',obj.MarkerSize,...
-%                 'LineWidth',obj.LineWidth);
-
-            % Method 2, faster, but strange markers
-%             obj.PlotSegments = line(obj.Axes,...
-%                 curX,...
-%                 curY,...
-%                 curZ,...
-%                 'LineStyle','-',...
-%                 'MarkerSize',obj.MarkerSize,...
-%                 'LineWidth',obj.LineWidth);
-           
+            % Get the first frames marker positions
+            curX = obj.markersX(obj.frame,:);
+            curY = obj.markersY(obj.frame,:);
+            curZ = obj.markersZ(obj.frame,:);            
+            curX = curX(obj.joints)';
+            curY = curY(obj.joints)';
+            curZ = curZ(obj.joints)';
             
-            % Method 3, fastest, but single colors.
+            %%% Very fast updating procedure with low level graphics. 
+            % Concatenate with nans between segment ends to represent all 
+            % segments with the same color as one single line object
+            catnanX = cat(1,curX,nan(1,size(curX,2)));
+            catnanY = cat(1,curY,nan(1,size(curY,2)));
+            catnanZ = cat(1,curZ,nan(1,size(curZ,2)));
             
+            % Put into array for vectorized graphics initialization
+            nanedXVec = nan(MaxNNodes*3,size(colors,1));
+            nanedYVec = nan(MaxNNodes*3,size(colors,1));
+            nanedZVec = nan(MaxNNodes*3,size(colors,1));
+            for i = 1:size(colors,1)
+                nanedXVec(1:numel(catnanX(:,cIds==i)),i) = reshape(catnanX(:,cIds==i),[],1);
+                nanedYVec(1:numel(catnanY(:,cIds==i)),i) = reshape(catnanY(:,cIds==i),[],1);
+                nanedZVec(1:numel(catnanZ(:,cIds==i)),i) = reshape(catnanZ(:,cIds==i),[],1);
+            end
             
-%             obj.PlotSegments = line(obj.Axes,...
-%                 cat(nanedXVec{:}),...
-%                 tempY,...
-%                 tempZ,...
-%                 'LineStyle','-',...
-%                 'MarkerSize',obj.MarkerSize,...
-%                 'LineWidth',obj.LineWidth);
-%             tempX = cat(1,curX,nan(size(curX,2)));
-%             tempX = reshape(tempX,[],1);
-%             tempY = cat(1,curY,nan(size(curY,2)));
-%             tempY = reshape(tempY,[],1);
-%             tempZ = cat(1,curZ,nan(size(curZ,2)));
-%             tempZ = reshape(tempZ,[],1);
-%             obj.PlotSegments = line(obj.Axes,...
-%                 tempX,...
-%                 tempY,...
-%                 tempZ,...
-%                 'LineStyle','-',...
-%                 'MarkerSize',obj.MarkerSize,...
-%                 'LineWidth',obj.LineWidth);
-            
-        % Method 4, fast, multicolor, bad Marker
-        
-        curX = obj.markersX(obj.frame,:);
-        curY = obj.markersY(obj.frame,:);
-        curZ = obj.markersZ(obj.frame,:);
-
-        curX = curX(obj.joints)';
-        curY = curY(obj.joints)';
-        curZ = curZ(obj.joints)';
-            
-        c = cell2mat(obj.color);
-        [colors,~,cIds] = unique(c,'rows');
-        [~, MaxNNodes] = mode(cIds); 
-        catnanX = cat(1,curX,nan(1,size(curX,2)));
-        catnanY = cat(1,curY,nan(1,size(curY,2)));
-        catnanZ = cat(1,curZ,nan(1,size(curZ,2)));
-        nanedXVec = nan(MaxNNodes*3,size(colors,1));
-        nanedYVec = nan(MaxNNodes*3,size(colors,1));
-        nanedZVec = nan(MaxNNodes*3,size(colors,1));
-        
-        for i = 1:size(colors,1)
-            nanedXVec(1:numel(catnanX(:,cIds==i)),i) = reshape(catnanX(:,cIds==i),[],1);
-            nanedYVec(1:numel(catnanY(:,cIds==i)),i) = reshape(catnanY(:,cIds==i),[],1);      
-            nanedZVec(1:numel(catnanZ(:,cIds==i)),i) = reshape(catnanZ(:,cIds==i),[],1);
-        end
-        obj.PlotSegments = line(obj.Axes,...
+            % Build line objects and set final properties
+            obj.PlotSegments = line(obj.Axes,...
                 nanedXVec,...
                 nanedYVec,...
                 nanedZVec,...
                 'LineStyle','-',...
+                'Marker','.',...
                 'MarkerSize',obj.MarkerSize,...
                 'LineWidth',obj.LineWidth);
-        set(obj.PlotSegments, {'color'}, mat2cell(colors,ones(size(colors,1),1)));
-        title(obj.Axes, obj.movieTitle,'Color','w',...
-              'Position',[0,0,obj.lim(2)]);
-
+            set(obj.PlotSegments, {'color'}, mat2cell(colors,ones(size(colors,1),1)));
+            title(obj.Axes, obj.movieTitle,'Color','w',...
+                'Position',[0,0,obj.lim(2)]);
         end % constructor
         
         function restrict(obj, newFrames)
@@ -192,62 +148,46 @@ classdef MarkerAnimator < Animator
                 case 's'
                     fprintf(obj(1).statusMsg,...
                         obj(1).frameInds(obj(1).frame),obj(1).frameRate);
-%                     for i = 1:numel(obj)
-%                         fprintf(obj(i).statusMsg,...
-%                             obj(i).frameInds(obj(i).frame),obj(i).frameRate);
-%                     end
+                    %                     for i = 1:numel(obj)
+                    %                         fprintf(obj(i).statusMsg,...
+                    %                             obj(i).frameInds(obj(i).frame),obj(i).frameRate);
+                    %                     end
             end
-%             update(obj);
         end
     end
     
     methods (Access = protected)
         function update(obj)
-            % Create the chart graphics     
-%             curX = obj.markersX(obj.frame,:);
-%             curY = obj.markersY(obj.frame,:);
-%             curZ = obj.markersZ(obj.frame,:);
-%             
-%             convertNJoints = ones(size(obj.joints,1),1);
-%             jointId = obj.joints;
-%             curX = mat2cell(curX(jointId),convertNJoints,2);
-%             curY = mat2cell(curY(jointId),convertNJoints,2);
-%             curZ = mat2cell(curZ(jointId),convertNJoints,2);
-%             
-%             valueArray = cat(2, curX, curY, curZ);
-%             nameArray = {'XData','YData','ZData'};
-%             segments = obj.PlotSegments;
-%             set(segments,nameArray,valueArray)
+            % Find color groups
+            c = cell2mat(obj.color);
+            [colors,~,cIds] = unique(c,'rows');
             
+            % Get the joints for the current frame
             curX = obj.markersX(obj.frame,:);
             curY = obj.markersY(obj.frame,:);
             curZ = obj.markersZ(obj.frame,:);
-            
             curX = curX(obj.joints)';
             curY = curY(obj.joints)';
             curZ = curZ(obj.joints)';
             
-            c = cell2mat(obj.color);
-            [colors,~,cIds] = unique(c,'rows');
-            [~, MaxNNodes] = mode(cIds);
+            %%% Very fast updating procedure with low level graphics. 
+            % Concatenate with nans between segment ends to represent all 
+            % segments with the same color as one single line object
             catnanX = cat(1,curX,nan(1,size(curX,2)));
             catnanY = cat(1,curY,nan(1,size(curY,2)));
             catnanZ = cat(1,curZ,nan(1,size(curZ,2)));
-%             nanedXVec = nan(MaxNNodes*3,size(colors,1));
-%             nanedYVec = nan(MaxNNodes*3,size(colors,1));
-%             nanedZVec = nan(MaxNNodes*3,size(colors,1));
+            
+            % Put into cell for vectorized graphics update
             nanedXVec = cell(size(colors,1),1);
             nanedYVec = cell(size(colors,1),1);
             nanedZVec = cell(size(colors,1),1);
-            
             for i = 1:size(colors,1)
-%                 nanedXVec(1:numel(catnanX(:,cIds==i)),i) = reshape(catnanX(:,cIds==i),[],1);
-%                 nanedYVec(1:numel(catnanY(:,cIds==i)),i) = reshape(catnanY(:,cIds==i),[],1);
-%                 nanedZVec(1:numel(catnanZ(:,cIds==i)),i) = reshape(catnanZ(:,cIds==i),[],1);
                 nanedXVec{i} = reshape(catnanX(:,cIds==i),[],1);
                 nanedYVec{i} = reshape(catnanY(:,cIds==i),[],1);
                 nanedZVec{i} = reshape(catnanZ(:,cIds==i),[],1);
             end
+            
+            % Update the values
             valueArray = cat(2, nanedXVec, nanedYVec, nanedZVec);
             nameArray = {'XData','YData','ZData'};
             segments = obj.PlotSegments;

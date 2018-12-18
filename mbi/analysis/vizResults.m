@@ -48,10 +48,10 @@ rat.compareTraces(frameIds,markerIds);
 %% View the rat and embedding simultaneously
 % close all;
 figure;
-markersets = {'aligned','imputed','embed','embed'};
-% markersets = {'aligned','imputed'};
+% markersets = {'aligned','imputed','embed','embed'};
+markersets = {'aligned','imputed'};
 % markersets = {'aligned','imputed','global'};
-h = rat.movie(markersets,[1 4]);
+h = rat.movie(markersets,[1 2]);
 
 %% restrict the frames in the movie to a subset of the whole. 
 cellfun(@(X) X.restrict(find(any(isnan(rat.imputedMarkers),2) & (movingFastFrames(1:5:end) & ~badSpines))),h);
