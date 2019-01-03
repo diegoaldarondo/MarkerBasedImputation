@@ -5,9 +5,10 @@ function reorganizeData(mocapPaths,imputationPath,copyOriginal)
 %the original information and imputed data reformatted to match the
 %original structure. 
 %
-% Syntax: reorganizeData(mocapPaths,imputationPath,copyOriginal);
+% Syntax: reorganizeData(originalDirectory,imputationPath,copyOriginal);
 % 
-% Inputs: mocapPaths - cell array containing paths to mocap files 
+% Inputs: originalDirectory - Path to directory containing original datasets.
+%         Path to imputation file. 
 %         imputationPath - Path to the imputation .h5 file.  
 %         copyOriginal - Boolean determining whether or not to copy the
 %         contents of the original mocap struct. 
@@ -26,7 +27,7 @@ function reorganizeData(mocapPaths,imputationPath,copyOriginal)
 % Author: Diego Aldarondo
 % Work address
 % email: diegoaldarondo@g.harvard.edu
-% November 2018; Last revision: 3-January-2019
+% November 2018; Last revision: 13-December-2018
 %------------- BEGIN CODE --------------
 
 %% Get postprocessing data
@@ -36,22 +37,26 @@ fprintf('Postprocessing data\n')
 %% Put the appropriate chunk in the correct file. 
 totalFramesRead = 1;
 stride = 5;
-vars = {'markers_aligned_preproc','markernames'};
+vars = {'markers_aligned_preproc','bad_frames_agg','move_frames',...
+        'move_frames_fast'};
 for i = 1:numel(mocapPaths)
+    % Get the size of the corresponding file. 
+    lastwarn('') % Clear last warning message
     fprintf('Reformatting %s\n',mocapPaths{i})
     mocap = load(mocapPaths{i});
+    [warnMsg, warnId] = lastwarn;
     % Handle warnings if the fields dont exist
-    if any(~isfield(mocap,vars))
+    if ~isempty(warnMsg)
         try
             % Try to see if the struct is nested
             temp = load(mocapPaths{i});
             mocap = temp.mocap_struct;
         catch
-            % Otherwise there is likely a problem with the path. 
+            % Otherwise forget about that file and move on. 
             error('Unable to load mocap struct:\n%s\n',mocapPaths{i})
         end
     end
-    [nFrames, nMarkers] = size(struct2array(mocap.markers_aligned_preproc));
+    [nFrames, nMarkers] = size(struct2array(mocap.markers_preproc));
     
     % Get the corresponding frames from the imputed dataset. 
     imputed_markers = markersFinal(totalFramesRead:(totalFramesRead + round((nFrames/stride))-1),:);
@@ -81,7 +86,7 @@ for i = 1:numel(mocapPaths)
     imputed_frames = cat(2,upsampled_imputed_frames{:});
     
     % Put back in the original markers that were not imputed. 
-    markers = mocap.markers_aligned_preproc;
+    markers = mocap.aligned_markers;
     imputed_markers(~logical(imputed_frames)) = markers(~logical(imputed_frames));
     
     % Copy the markernames in case user does not want to copy the original
