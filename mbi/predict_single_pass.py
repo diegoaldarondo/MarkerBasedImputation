@@ -1,5 +1,5 @@
 """Imputes markers with mbi models."""
-# import clize
+import clize
 import h5py
 from keras.models import load_model
 import numpy as np
