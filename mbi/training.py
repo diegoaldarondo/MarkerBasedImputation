@@ -47,7 +47,7 @@ def create_model(net_name, **kwargs):
 def train(data_path, *, base_output_path="models", run_name=None,
           data_name=None, net_name="wave_net", clean=False, input_length=9,
           output_length=1,  n_markers=60, stride=1, train_fraction=.85,
-          val_fraction=0.15, only_moving_frames=True, n_filters=512,
+          val_fraction=0.15, only_moving_frames=False, n_filters=512,
           filter_width=2, layers_per_level=3, n_dilations=None,
           latent_dim=750, epochs=50, batch_size=1000,
           lossfunc='mean_squared_error', lr=1e-4, batches_per_epoch=0,
@@ -112,7 +112,7 @@ def train(data_path, *, base_output_path="models", run_name=None,
         bad_frames = bad_frames[moving_frames, :]
     markers = markers[::stride, :]
     bad_frames = bad_frames[::stride, :]
-    
+
     # Get Ids
     print('Getting indices')
     [input_ids, target_ids] = get_ids(bad_frames, input_length,
