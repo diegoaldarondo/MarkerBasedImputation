@@ -104,7 +104,7 @@ bad_frames = new_bad_frames;
 %% Put in some values for the nans
 % (Otherwise the model will fail if nans aren't accounted for in
 % badFrames, which happens in some datasets). These are taken out later.  
-markers(logical(repelem(bad_frames(:),1,3))) = nan;
+markers(logical(repelem(bad_frames,1,3))) = nan;
 marker_means = nanmean(markers,1);
 marker_stds = nanstd(markers,1);
 for i = 1:size(markers,2)
