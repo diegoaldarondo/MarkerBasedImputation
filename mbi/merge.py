@@ -3,6 +3,7 @@ import clize
 import datetime
 import h5py
 import numpy as np
+import os
 import re
 from scipy.io import savemat, loadmat
 from skimage import measure
@@ -26,9 +27,14 @@ def merge(save_path, *fold_paths):
     :param save_path: Path to .mat file where merged predictions will be saved.
     :param fold_paths: List of paths to chunked predictions to merge.
     """
-    folds = [int(re.findall('\d+', s)[0]) for s in fold_paths]
+    # Order the files in the imputation path by the fold id in the filename
+    # Consider revising
+    fold_files = [os.path.basename(s) for s in fold_paths]
+    folds = [int(re.findall('\d+', s)[0]) for s in fold_files]
     sorted_indices = sorted(range(len(folds)), key=lambda k: folds[k])
     fold_paths = [fold_paths[i] for i in sorted_indices]
+    print('Reorganized fold paths:')
+    print(fold_paths)
 
     n_folds_to_merge = len(fold_paths)
     markers = None
