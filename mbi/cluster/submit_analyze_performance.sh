@@ -13,16 +13,16 @@
 # Specify paths and variables for analysis. Be sure all arrays have the same length.
 FUNC="analyze_performance.py"
 MODELBASEPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM33/20171125/models/model_ensemble")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25/20170917/models/model_ensemble")
 DATAPATH=(\
-"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM33/20171125/dataset.h5")
+"/n/holylfs02/LABS/olveczky_lab/Diego/data/JDM25/20170917/dataset.h5")
 RUNNAME=(\
-"analyze")
+"analyze_5_29_19")
 # Run analysis with parameters specified above.
 count=0
 while [ "x${MODELBASEPATH[count]}" != "x" ]
 do
-   srun -l --gres=gpu:1 -n1 cluster/py.sh $FUNC ${MODELBASEPATH[count]} ${DATAPATH[count]} --analyze-history=False --model-name="final_model.h5" --run-name=${RUNNAME[count]} --stride=5 --skip=300 &
+   srun -l --gres=gpu:1 -n1 cluster/py.sh $FUNC ${MODELBASEPATH[count]} ${DATAPATH[count]} --analyze-history=False --model-name="final_model.h5" --run-name=${RUNNAME[count]} --stride=5 --skip=300 --min-gap-length=30 --max-gap-length=30 &
    count=$(( $count + 1 ))
 done
 wait

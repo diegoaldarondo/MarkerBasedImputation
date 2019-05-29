@@ -366,8 +366,14 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
     # savemat(os.path.join(viz_directory, 'errors.mat'),
     #         {'delta_markers': delta_markers, 'member_predsF': member_predsF,
     #          'member_predsR': member_predsR})
+    # savemat(os.path.join(viz_directory, 'errors.mat'),
+    #         {'delta_markers': delta_markers, 'member_stds': member_stds})
     savemat(os.path.join(viz_directory, 'errors.mat'),
-            {'delta_markers': delta_markers, 'member_stds': member_stds})
+            {'delta_markers': delta_markers, 'member_stds': member_stds,
+             'input': X, 'target': Y, 'input_ids': input_ids,
+             'skip': skip, 'stride': stride, 'target_ids': target_ids,
+             'markers': markers, 'total': total})
+
 
 if __name__ == "__main__":
     # Wrapper for running from commandline
