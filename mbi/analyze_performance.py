@@ -331,25 +331,30 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
     lengths = np.arange(min_gap_length, max_gap_length+1, 10)
     delta_markers = np.zeros((lengths.shape[0],), dtype=np.object)
     member_stds = np.zeros((lengths.shape[0],), dtype=np.object)
+    X = np.zeros((lengths.shape[0],), dtype=np.object)
+    Y = np.zeros((lengths.shape[0],), dtype=np.object)
+    input_ids = np.zeros((lengths.shape[0],), dtype=np.object)
+    target_ids = np.zeros((lengths.shape[0],), dtype=np.object)
+    total = np.zeros((lengths.shape[0],), dtype=np.object)
     # member_predsF = np.zeros((lengths.shape[0],), dtype=np.object)
     # member_predsR = np.zeros((lengths.shape[0],), dtype=np.object)
 
     for i in range(lengths.shape[0]):
         # Get Ids
         print('Getting indices %d' % (i), flush=True)
-        [input_ids, target_ids] = get_ids(bad_frames, input_length,
-                                          input_length + lengths[i],
-                                          True, True)
+        [input_ids[i], target_ids[i]] = get_ids(bad_frames, input_length,
+                                                input_length + lengths[i],
+                                                True, True)
         print(input_ids.shape, flush=True)
         # Get the data corresponding to the indices
         print('Indexing into data')
-        X = markers[input_ids[::skip, :], :]
-        Y = markers[target_ids[::skip, :lengths[i]], :]
-        XR = markers[target_ids[::skip, :(lengths[i]-1):-1], :]
-        YR = Y[:, ::-1, :]
+        X[i] = markers[input_ids[i][::skip, :], :]
+        Y[i] = markers[target_ids[i][::skip, :lengths[i]], :]
+        XR = markers[target_ids[i][::skip, :(lengths[i]-1):-1], :]
+        YR = Y[i][:, ::-1, :]
 
         # Concatenate for use in the multiple prediction function
-        total = np.concatenate((X, Y), axis=1)
+        total[i] = np.concatenate((X[i], Y[i]), axis=1)
         totalR = np.concatenate((XR, YR), axis=1)
 
         run_folder = 'length_%d' % (lengths[i])
@@ -358,8 +363,9 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
             os.makedirs(save_directory)
         # Analyze marker predictions over time
         delta_markers[i], member_stds[i] = \
-            analyze_marker_predictions(model, total, totalR, Y, marker_means,
-                                       marker_stds, save_directory,
+            analyze_marker_predictions(model, total[i], totalR, Y[i],
+                                       marker_means, marker_stds,
+                                       save_directory,
                                        plot_distribution=plot_distribution)
 
     print('Saving predictions')
