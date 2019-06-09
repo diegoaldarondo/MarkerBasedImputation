@@ -34,7 +34,8 @@ def wave_net(lossfunc, lr, input_length, output_length, n_markers, n_filters,
             x = Conv1D(filters=n_filters,
                        kernel_size=filter_width,
                        padding='causal',
-                       dilation_rate=dilation_rate)(x)
+                       dilation_rate=dilation_rate,
+                       activation='relu')(x)
 
     # Dense connections
     x = Dense(60)(x)
