@@ -56,7 +56,7 @@ python setup.py install
 <a name="Algorithm-summary"></a>
 ## Algorithm summary
 
-![alt text](flowchart)
+![Image](./common/mbi_flowchart.png)
 
 [Back to top](#Top)
 <a name="Step-by-step-guide"></a>
@@ -109,5 +109,3 @@ The postprocessing folder includes a number of Matlab functions that complete im
 * **Jesse Marshall** - [jessedmarshall](https://github.com/jessedmarshall)
 * **Tim Dunn** - [spoonsso](https://github.com/spoonsso)
 * **Bence Olveczky** [Lab Website](https://olveczkylab.oeb.harvard.edu/)
-
-[flowchart]: ./common/mbi_flowchart.png
