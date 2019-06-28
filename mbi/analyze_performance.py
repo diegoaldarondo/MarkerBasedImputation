@@ -379,7 +379,11 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
              'input': X, 'target': Y, 'input_ids': input_ids,
              'skip': skip, 'stride': stride, 'target_ids': target_ids,
              'markers': markers, 'total': total, 'marker_stds': marker_stds,
+<<<<<<< HEAD
              'marker_means': marker_means, 'predictions': predictions})
+=======
+             'marker_means': marker_means})
+>>>>>>> f3a986bb7c84eaa4badc22b96f1ee4a88df0b8d9
 
 
 if __name__ == "__main__":

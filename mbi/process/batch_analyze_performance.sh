@@ -22,7 +22,11 @@ DATAPATH=(\
 "/n/home02/daldarondo/LabDir/Diego/data/JDM27/20171208/JDM27_fullDay.h5" \
 "/n/home02/daldarondo/LabDir/Diego/data/JDM31_imputation_test/JDM31_fullDay.h5")
 
+<<<<<<< HEAD
 RUNNAME="analyze_6_28_19"
+=======
+RUNNAME="analyze_6_25_19"
+>>>>>>> f3a986bb7c84eaa4badc22b96f1ee4a88df0b8d9
 # Run analysis with parameters specified above.
 count=0
 while [ "x${MODELBASEPATH[count]}" != "x" ]
