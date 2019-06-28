@@ -73,7 +73,7 @@ def predict_markers(model, X, markers_to_predict, num_frames=True,
         for i in range(num_frames):
             pred, member_pred = model.predict(X_start)
             pred[:, 0, ~markers_to_predict] = \
-                X[:, input_length+count, ~markers_to_predict]
+                X[:, input_length + count, ~markers_to_predict]
             preds[:, i, :] = np.squeeze(pred)
             # member_preds[:, :, i, :] = member_pred
 
@@ -89,7 +89,7 @@ def predict_markers(model, X, markers_to_predict, num_frames=True,
         for i in range(num_frames):
             pred = model.predict(X_start)
             pred[:, 0, ~markers_to_predict] = \
-                X[:, input_length+count, ~markers_to_predict]
+                X[:, input_length + count, ~markers_to_predict]
             preds[:, i, :] = np.squeeze(pred)
             X_start = np.concatenate((X_start[:, 1:, :], pred), axis=1)
             count += 1
@@ -105,7 +105,7 @@ def sigmoid(x, x_0, k):
     :param x_0: midpoint
     :parak k: exponent constant.
     """
-    return 1 / (1 + np.exp(-k*(x-x_0)))
+    return 1 / (1 + np.exp(-k * (x - x_0)))
 
 
 def plot_error_distribution_over_time(delta, delta_marker,
@@ -128,13 +128,13 @@ def plot_error_distribution_over_time(delta, delta_marker,
 
     for i in range(num_ktiles):
         # Find the upper bound of the k-tile
-        pct = (i+1)/num_ktiles*100
+        pct = (i + 1) / num_ktiles * 100
         top = np.percentile(delta_marker, pct, axis=0)
-        if i == (num_ktiles-1):
+        if i == (num_ktiles - 1):
             top = np.percentile(delta_marker, maxbound, axis=0)
 
         # Find the lower bound of the k-tile
-        pct2 = i/num_ktiles*100
+        pct2 = i / num_ktiles * 100
         bot = np.percentile(delta_marker, pct2, axis=0)
 
         # Draw the k-tile
@@ -169,8 +169,9 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means,
     :param viz_directory: Directory in which to save images.
     """
     n_markers = total.shape[2]
-    delta_markers = np.zeros((Y.shape[0], Y.shape[1], np.int32(n_markers/3)))
+    delta_markers = np.zeros((Y.shape[0], Y.shape[1], np.int32(n_markers / 3)))
     total_member_stds = np.zeros((Y.shape[0], Y.shape[1], n_markers))
+    predictions = np.zeros((Y.shape[0], Y.shape[1], n_markers))
 
     # Check how many outputs the model has, and how many members if returning
     # member data.
@@ -185,9 +186,9 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means,
         member_stdsR = [None]
 
     # For each marker, predict position over all gaps and make plots.
-    for marker_id in range(np.int32(n_markers/3)):
+    for marker_id in range(np.int32(n_markers / 3)):
         # Pick the markers you would like to predict
-        predict_ids = [(marker_id*3), (marker_id*3)+1, (marker_id*3)+2]
+        predict_ids = marker_id * 3 + np.array([0, 1, 2])
         markers_to_predict = np.zeros((n_markers)) > 1
         markers_to_predict[predict_ids] = True
 
@@ -224,11 +225,11 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means,
         predsR_world = np.zeros((predsR.shape))
         for i in range(Y_world.shape[2]):
             Y_world[:, :, i] = \
-                Y[:, :, i]*marker_stds[0, i] + marker_means[0, i]
+                Y[:, :, i] * marker_stds[0, i] + marker_means[0, i]
             preds_world[:, :, i] = \
-                preds[:, :, i]*marker_stds[0, i] + marker_means[0, i]
+                preds[:, :, i] * marker_stds[0, i] + marker_means[0, i]
             predsR_world[:, :, i] = \
-                predsR[:, :, i]*marker_stds[0, i] + marker_means[0, i]
+                predsR[:, :, i] * marker_stds[0, i] + marker_means[0, i]
 
         predsR_world = predsR_world[:, ::-1, :]
 
@@ -236,17 +237,17 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means,
         # k = .2335 # value determined empirically by minimizing MSE
         k = 1
         weightR = sigmoid(np.arange(0, preds_world.shape[1]),
-                          preds_world.shape[1]/2, k)
-        weight = 1-weightR
+                          preds_world.shape[1] / 2, k)
+        weight = 1 - weightR
         preds_world_weighted_average = np.zeros((preds_world.shape))
         member_stds = np.zeros((preds_world.shape))
         for i in range(preds_world.shape[0]):
             for j in range(preds_world.shape[2]):
                 preds_world_weighted_average[i, :, j] = \
-                    preds_world[i, :, j]*weight + predsR_world[i, :, j]*weightR
+                    preds_world[i, :, j] * weight + predsR_world[i, :, j] * weightR
                 member_stds[i, :, j] = \
-                    np.sqrt(((member_stdsF[i, :, j]**2)*weight) +
-                            ((member_stdsR[i, :, j]**2)*weightR))
+                    np.sqrt(((member_stdsF[i, :, j]**2) * weight) +
+                            ((member_stdsR[i, :, j]**2) * weightR))
         delta = np.abs(Y_world - preds_world_weighted_average)
         delta_marker = np.sqrt(np.sum(delta[:, :, predict_ids]**2, axis=2))
 
@@ -257,8 +258,10 @@ def analyze_marker_predictions(model, total, totalR, Y, marker_means,
 
         delta_markers[:, :, marker_id] = delta_marker
         total_member_stds[:, :, predict_ids] = member_stds[:, :, predict_ids]
+        predictions[:, :, predict_ids] = \
+            preds_world_weighted_average[:, :, predict_ids]
 
-    return delta_markers, total_member_stds
+    return delta_markers, total_member_stds, predictions
 
 
 def analyze_performance(model_base_path, data_path, *, run_name=None,
@@ -328,16 +331,17 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
     markers = markers[::stride, :]
     bad_frames = bad_frames[::stride, :]
 
-    lengths = np.arange(min_gap_length, max_gap_length+1, 10)
+    lengths = np.arange(min_gap_length, max_gap_length + 1, 10)
+
+    # Set up variables to save to matlab cells.
     delta_markers = np.zeros((lengths.shape[0],), dtype=np.object)
     member_stds = np.zeros((lengths.shape[0],), dtype=np.object)
+    predictions = np.zeros((lengths.shape[0],), dtype=np.object)
     X = np.zeros((lengths.shape[0],), dtype=np.object)
     Y = np.zeros((lengths.shape[0],), dtype=np.object)
     input_ids = np.zeros((lengths.shape[0],), dtype=np.object)
     target_ids = np.zeros((lengths.shape[0],), dtype=np.object)
     total = np.zeros((lengths.shape[0],), dtype=np.object)
-    # member_predsF = np.zeros((lengths.shape[0],), dtype=np.object)
-    # member_predsR = np.zeros((lengths.shape[0],), dtype=np.object)
 
     for i in range(lengths.shape[0]):
         # Get Ids
@@ -345,12 +349,12 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
         [input_ids[i], target_ids[i]] = get_ids(bad_frames, input_length,
                                                 input_length + lengths[i],
                                                 True, True)
-        print(input_ids.shape, flush=True)
+
         # Get the data corresponding to the indices
         print('Indexing into data')
         X[i] = markers[input_ids[i][::skip, :], :]
         Y[i] = markers[target_ids[i][::skip, :lengths[i]], :]
-        XR = markers[target_ids[i][::skip, :(lengths[i]-1):-1], :]
+        XR = markers[target_ids[i][::skip, :(lengths[i] - 1):-1], :]
         YR = Y[i][:, ::-1, :]
 
         # Concatenate for use in the multiple prediction function
@@ -361,24 +365,21 @@ def analyze_performance(model_base_path, data_path, *, run_name=None,
         save_directory = os.path.join(viz_directory, run_folder)
         if not os.path.exists(save_directory):
             os.makedirs(save_directory)
+
         # Analyze marker predictions over time
-        delta_markers[i], member_stds[i] = \
+        delta_markers[i], member_stds[i], predictions[i] = \
             analyze_marker_predictions(model, total[i], totalR, Y[i],
                                        marker_means, marker_stds,
                                        save_directory,
                                        plot_distribution=plot_distribution)
 
     print('Saving predictions')
-    # savemat(os.path.join(viz_directory, 'errors.mat'),
-    #         {'delta_markers': delta_markers, 'member_predsF': member_predsF,
-    #          'member_predsR': member_predsR})
-    # savemat(os.path.join(viz_directory, 'errors.mat'),
-    #         {'delta_markers': delta_markers, 'member_stds': member_stds})
     savemat(os.path.join(viz_directory, 'errors.mat'),
             {'delta_markers': delta_markers, 'member_stds': member_stds,
              'input': X, 'target': Y, 'input_ids': input_ids,
              'skip': skip, 'stride': stride, 'target_ids': target_ids,
-             'markers': markers, 'total': total})
+             'markers': markers, 'total': total, 'marker_stds': marker_stds,
+             'marker_means': marker_means, 'predictions': predictions})
 
 
 if __name__ == "__main__":
